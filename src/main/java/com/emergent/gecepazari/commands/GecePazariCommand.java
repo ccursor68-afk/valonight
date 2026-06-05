@@ -64,8 +64,8 @@ public final class GecePazariCommand implements CommandExecutor, TabCompleter {
         }
         String sub = args[0].toLowerCase();
         switch (sub) {
-            case "baslat", "start" -> handleStart(sender);
-            case "durdur", "stop" -> handleStop(sender);
+            case "baslat", "start", "ac" -> handleStart(sender);
+            case "durdur", "stop", "kapat", "kapatpazar", "close" -> handleStop(sender);
             case "reload" -> handleReload(sender);
             case "lang", "language", "dil" -> handleLang(sender, args);
             default -> sender.sendMessage(ColorUtil.component(lang.get(sender, "unknown-subcommand")));
@@ -114,7 +114,14 @@ public final class GecePazariCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ColorUtil.component(lang.get(sender, "event-not-active")));
             return;
         }
-        sender.sendMessage(ColorUtil.component(lang.get(sender, "event-stopped")));
+        // Sunucudaki online oyuncularin hepsine kendi dillerinde bildir
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!p.hasPermission(NOTIFY_PERM)) continue;
+            p.sendMessage(ColorUtil.component(lang.get(p, "event-stopped")));
+        }
+        // Plani da yeniden senkronla (auto-close task varsa iptal edilir)
+        scheduler.stop();
+        scheduler.start();
     }
 
     private void handleReload(CommandSender sender) {
@@ -167,7 +174,7 @@ public final class GecePazariCommand implements CommandExecutor, TabCompleter {
             List<String> base = new ArrayList<>();
             base.add("lang");
             if (sender.hasPermission(ADMIN_PERM)) {
-                base.addAll(Arrays.asList("baslat", "durdur", "reload"));
+                base.addAll(Arrays.asList("baslat", "durdur", "kapat", "reload"));
             }
             return filter(base, args[0]);
         }

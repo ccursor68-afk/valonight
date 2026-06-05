@@ -160,6 +160,8 @@ public final class MarketManager {
 
         if (slot.sealed()) {
             if (market.revealSlot(interactionId)) {
+                // Reveal kalici olmali: YAML'a kaydet ki ikinci acilista direkt esya gozuksun.
+                dataManager.save(market.getData());
                 return new InteractionResult(InteractionType.REVEAL, slot.template(), null, 0);
             }
             return new InteractionResult(InteractionType.IGNORED, null, null, 0);

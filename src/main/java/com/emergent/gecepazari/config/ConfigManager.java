@@ -175,9 +175,9 @@ public final class ConfigManager {
         return plugin.getConfig().getStringList("gui.open-button.lore");
     }
 
-    public double getRadius() { return plugin.getConfig().getDouble("market.radius", 3.0); }
+    public double getRadius() { return plugin.getConfig().getDouble("market.radius", 4.5); }
     public double getHeightOffset() { return plugin.getConfig().getDouble("market.height-offset", 0.2); }
-    public double getArcDegrees() { return plugin.getConfig().getDouble("market.arc-degrees", 160.0); }
+    public double getArcDegrees() { return plugin.getConfig().getDouble("market.arc-degrees", 150.0); }
     public int getTeleportDuration() { return plugin.getConfig().getInt("market.teleport-duration", 3); }
     public int getUpdateIntervalTicks() { return plugin.getConfig().getInt("market.update-interval-ticks", 2); }
     public double getBobAmplitude() { return plugin.getConfig().getDouble("market.bob-amplitude", 0.15); }

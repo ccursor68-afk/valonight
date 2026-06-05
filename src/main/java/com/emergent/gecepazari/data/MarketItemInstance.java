@@ -10,17 +10,20 @@ public final class MarketItemInstance {
     private final double finalPrice;
     private final int initialStock;
     private int remainingStock;
+    private boolean revealed;
 
     public MarketItemInstance(String templateId,
                               int discountPercent,
                               double finalPrice,
                               int initialStock,
-                              int remainingStock) {
+                              int remainingStock,
+                              boolean revealed) {
         this.templateId = templateId;
         this.discountPercent = discountPercent;
         this.finalPrice = finalPrice;
         this.initialStock = initialStock;
         this.remainingStock = remainingStock;
+        this.revealed = revealed;
     }
 
     public String getTemplateId() { return templateId; }
@@ -28,6 +31,9 @@ public final class MarketItemInstance {
     public double getFinalPrice() { return finalPrice; }
     public int getInitialStock() { return initialStock; }
     public int getRemainingStock() { return remainingStock; }
+    public boolean isRevealed() { return revealed; }
+
+    public void setRevealed(boolean revealed) { this.revealed = revealed; }
 
     public boolean isSoldOut() { return remainingStock <= 0; }
 
@@ -35,7 +41,6 @@ public final class MarketItemInstance {
         if (remainingStock > 0) remainingStock--;
     }
 
-    /** Bu ana kadar kac adet satildi. */
     public int getSoldCount() {
         return Math.max(0, initialStock - remainingStock);
     }

@@ -21,12 +21,12 @@ gui:
 
 # Pazar mekanik ayarlari
 market:
-  # Oyuncunun etrafindaki yarim ay yaricapi (blok)
-  radius: 3.0
+  # Oyuncunun etrafindaki yarim ay yaricapi (blok). Hologramlarin ic ice girmemesi icin 4.5+ onerilir.
+  radius: 4.5
   # Oyuncunun bakis yonunde yarim ay'in ortalama yuksekligi (goz hizasina gore offset)
   height-offset: 0.2
   # Yarim ayin acisi (derece olarak). 180 = tam yari cember.
-  arc-degrees: 160.0
+  arc-degrees: 150.0
   # Esyalarin oyuncuya gore sabitlendigi mesafe icin yumusatma (tick cinsinden)
   teleport-duration: 3
   # Pozisyon guncelleme tick araligi

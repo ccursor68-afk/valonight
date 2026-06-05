@@ -155,28 +155,31 @@ public final class PlayerMarket {
         int td = config.getTeleportDuration();
         Rarity rarity = template.getRarity();
 
-        // ItemDisplay: BASLANGICTA RARITY KAFASI
-        ItemStack sealedStack = SkullUtil.createCustomHead(rarity.getSkullTextureBase64());
+        // Eger bu slot daha onceden acilmissa direkt gercek esyayi goster.
+        final boolean startSealed = !inst.isRevealed();
+        final ItemStack startStack = startSealed
+                ? SkullUtil.createCustomHead(rarity.getSkullTextureBase64())
+                : buildRealItemStack(template, Math.max(1, template.getAmount()));
+        final float startScale = startSealed ? 1.2f : 0.95f;
 
         ItemDisplay itemDisplay = at.getWorld().spawn(at, ItemDisplay.class, ed -> {
-            ed.setItemStack(sealedStack);
+            ed.setItemStack(startStack);
             ed.setTeleportDuration(td);
             ed.setBillboard(Display.Billboard.CENTER);
             ed.setPersistent(false);
             ed.setInvulnerable(true);
             ed.setGravity(false);
-            // Kafalar buyuk gozuksun
             Transformation t = ed.getTransformation();
             ed.setTransformation(new Transformation(
                     t.getTranslation(),
                     t.getLeftRotation(),
-                    new Vector3f(1.2f, 1.2f, 1.2f),
+                    new Vector3f(startScale, startScale, startScale),
                     t.getRightRotation()
             ));
         });
 
-        // TextDisplay (hologram) - kafanin uzerinde
-        Location holoLoc = at.clone().add(0, 1.05, 0);
+        // TextDisplay (hologram) - kafanin/esya'nin uzerinde
+        Location holoLoc = at.clone().add(0, 1.25, 0);
         TextDisplay textDisplay = holoLoc.getWorld().spawn(holoLoc, TextDisplay.class, td2 -> {
             td2.setTeleportDuration(td);
             td2.setBillboard(Display.Billboard.CENTER);
@@ -195,8 +198,9 @@ public final class PlayerMarket {
                     new Vector3f(1.1f, 1.1f, 1.1f),
                     tt.getRightRotation()
             ));
-            // sealed metni
-            td2.text(buildSealedHologram(rarity));
+            td2.text(startSealed
+                    ? buildSealedHologram(rarity)
+                    : buildRevealedHologram(template, inst));
         });
 
         // Interaction entity
@@ -209,6 +213,7 @@ public final class PlayerMarket {
         });
 
         MarketSlot slot = new MarketSlot(itemDisplay, textDisplay, interaction, inst, template, phase);
+        slot.sealed = startSealed;
         slots.add(slot);
         interactionLookup.put(interaction.getUniqueId(), slot);
     }
@@ -317,6 +322,7 @@ public final class PlayerMarket {
         if (s == null || !s.sealed) return false;
 
         s.sealed = false;
+        s.instance.setRevealed(true);
 
         Location loc = s.itemDisplay.getLocation();
         // Patlama efekti
@@ -419,7 +425,7 @@ public final class PlayerMarket {
 
                     s.itemDisplay.teleport(target);
 
-                    Location holoLoc = target.clone().add(0, 1.05, 0);
+                    Location holoLoc = target.clone().add(0, 1.25, 0);
                     s.textDisplay.teleport(holoLoc);
 
                     s.interaction.teleport(target);

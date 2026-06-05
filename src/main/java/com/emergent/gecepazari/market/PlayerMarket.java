@@ -5,13 +5,16 @@ import com.emergent.gecepazari.config.ConfigManager;
 import com.emergent.gecepazari.data.MarketItemInstance;
 import com.emergent.gecepazari.data.MarketItemTemplate;
 import com.emergent.gecepazari.data.PlayerMarketData;
+import com.emergent.gecepazari.data.Rarity;
 import com.emergent.gecepazari.util.ArcMath;
 import com.emergent.gecepazari.util.ColorUtil;
+import com.emergent.gecepazari.util.SkullUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
@@ -33,11 +36,13 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Bir oyuncuya ait fiziksel pazar. ItemDisplay + TextDisplay + Interaction entity'leri
- * yarim ay seklinde olusturur, oyuncuyu pururzssuzce takip eder ve sadece o oyuncuya gozukur.
+ * Bir oyuncuya ait fiziksel pazar.
+ * Iki asamali animasyon:
+ *   1. SEALED (kapali): nadirlik bazli custom oyuncu kafasi belirir, oyuncunun etrafinda bob yapar.
+ *   2. REVEALED (acik): oyuncu sag tikladiginda kafa patlama efektiyle dagilir, gercek esya ortaya cikar.
+ *      Bir kez daha sag tiklayinca satin alma denemesi yapilir.
  *
- * <p>Onemli not: Yarim ay'in yonelimi (yaw) spawn aninda KILITLENIR. Boylece oyuncu kafasini
- * cevirdiginde esyalar kaymaz; sadece oyuncunun konumu degisirse (yurudukce) takip eder.</p>
+ * Yarim ay yonelimi (yaw) spawn aninda kilitlenir; kafa cevirmek arc'i dondurmez.
  */
 public final class PlayerMarket {
 
@@ -49,21 +54,24 @@ public final class PlayerMarket {
         MONEY_FORMAT = new DecimalFormat("#,##0.##", sym);
     }
 
-    /** Bir slottaki tum entity'leri tutar. */
+    /** Bir slottaki tum entity'leri ve durumu tutar. */
     private static final class MarketSlot {
         final ItemDisplay itemDisplay;
         final TextDisplay textDisplay;
         final Interaction interaction;
         final MarketItemInstance instance;
         final MarketItemTemplate template;
+        boolean sealed = true;
+        double bobPhase;
 
         MarketSlot(ItemDisplay itemDisplay, TextDisplay textDisplay, Interaction interaction,
-                   MarketItemInstance instance, MarketItemTemplate template) {
+                   MarketItemInstance instance, MarketItemTemplate template, double bobPhase) {
             this.itemDisplay = itemDisplay;
             this.textDisplay = textDisplay;
             this.interaction = interaction;
             this.instance = instance;
             this.template = template;
+            this.bobPhase = bobPhase;
         }
     }
 
@@ -76,6 +84,7 @@ public final class PlayerMarket {
     private final Map<UUID, MarketSlot> interactionLookup = new HashMap<>();
     private BukkitRunnable followTask;
     private float anchoredYaw;
+    private long tickCounter = 0;
     private boolean closed = false;
 
     public PlayerMarket(GecePazariPlugin plugin,
@@ -97,7 +106,7 @@ public final class PlayerMarket {
         return s == null ? null : new MarketSlotView(s);
     }
 
-    /** Pazari dunyada spawn'lar. Yaw, spawn aninda kilitlenir. */
+    /** Pazari dunyada spawn'lar. Yaw spawn aninda kilitlenir. */
     public void spawn() {
         Location origin = owner.getLocation();
         this.anchoredYaw = origin.getYaw();
@@ -111,19 +120,27 @@ public final class PlayerMarket {
             MarketItemInstance inst = data.getItems().get(i);
             MarketItemTemplate template = config.getTemplate(inst.getTemplateId());
             if (template == null) continue;
-            spawnSlot(points[i], inst, template);
+            // Faz: slotlar farkli zamanlarda hareket etsin
+            double phase = (i * Math.PI * 2.0) / Math.max(1, count);
+            spawnSlot(points[i], inst, template, phase);
         }
 
         hideFromOthers();
+        playOpenEffect();
         startFollowTask();
+    }
+
+    private void playOpenEffect() {
+        Location loc = owner.getLocation();
+        loc.getWorld().playSound(loc, Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 1.4f);
+        loc.getWorld().playSound(loc, Sound.BLOCK_ENDER_CHEST_OPEN, 0.7f, 1.2f);
     }
 
     /** Anchored yaw kullanarak yarim ay noktalarini hesaplar. */
     private Location[] computeArcPoints(Location playerLocation) {
-        // Yaw'i kilitli yaw ile zorla. Bu sayede kafa cevirme arc'i dondurmez.
         Location anchor = playerLocation.clone();
         anchor.setYaw(anchoredYaw);
-        anchor.setPitch(0f); // pitch de etkilemesin
+        anchor.setPitch(0f);
 
         int count = data.getItems().size();
         return ArcMath.calculateArcPoints(
@@ -134,73 +151,79 @@ public final class PlayerMarket {
         );
     }
 
-    private void spawnSlot(Location at, MarketItemInstance inst, MarketItemTemplate template) {
+    private void spawnSlot(Location at, MarketItemInstance inst, MarketItemTemplate template, double phase) {
         int td = config.getTeleportDuration();
+        Rarity rarity = template.getRarity();
 
-        // ItemDisplay - Billboard.CENTER ile her zaman kameraya doner
+        // ItemDisplay: BASLANGICTA RARITY KAFASI
+        ItemStack sealedStack = SkullUtil.createCustomHead(rarity.getSkullTextureBase64());
+
         ItemDisplay itemDisplay = at.getWorld().spawn(at, ItemDisplay.class, ed -> {
-            ed.setItemStack(buildItemStack(template));
+            ed.setItemStack(sealedStack);
             ed.setTeleportDuration(td);
             ed.setBillboard(Display.Billboard.CENTER);
             ed.setPersistent(false);
             ed.setInvulnerable(true);
             ed.setGravity(false);
-            // Boyut: tukenmis ise hafifce kucult
-            float scale = inst.isSoldOut() ? 0.7f : 0.95f;
+            // Kafalar buyuk gozuksun
             Transformation t = ed.getTransformation();
             ed.setTransformation(new Transformation(
                     t.getTranslation(),
                     t.getLeftRotation(),
-                    new Vector3f(scale, scale, scale),
+                    new Vector3f(1.2f, 1.2f, 1.2f),
                     t.getRightRotation()
             ));
         });
 
-        // TextDisplay (hologram) - esya uzerinde
-        Location holoLoc = at.clone().add(0, 0.95, 0);
+        // TextDisplay (hologram) - kafanin uzerinde
+        Location holoLoc = at.clone().add(0, 1.05, 0);
         TextDisplay textDisplay = holoLoc.getWorld().spawn(holoLoc, TextDisplay.class, td2 -> {
             td2.setTeleportDuration(td);
             td2.setBillboard(Display.Billboard.CENTER);
-            td2.setBackgroundColor(Color.fromARGB(180, 12, 12, 18));
+            td2.setBackgroundColor(Color.fromARGB(190, 8, 8, 14));
             td2.setSeeThrough(false);
             td2.setPersistent(false);
             td2.setInvulnerable(true);
             td2.setShadowed(true);
             td2.setAlignment(TextDisplay.TextAlignment.CENTER);
             td2.setDefaultBackground(false);
-            td2.setLineWidth(220);
-            // Hafif buyut
+            td2.setLineWidth(260);
             Transformation tt = td2.getTransformation();
             td2.setTransformation(new Transformation(
                     tt.getTranslation(),
                     tt.getLeftRotation(),
-                    new Vector3f(1.05f, 1.05f, 1.05f),
+                    new Vector3f(1.1f, 1.1f, 1.1f),
                     tt.getRightRotation()
             ));
-            td2.text(buildHologramText(template, inst));
+            // sealed metni
+            td2.text(buildSealedHologram(rarity));
         });
 
-        // Interaction entity - tiklamayi yakalar
+        // Interaction entity
         Interaction interaction = at.getWorld().spawn(at, Interaction.class, ie -> {
-            ie.setInteractionWidth(1.3f);
-            ie.setInteractionHeight(1.6f);
+            ie.setInteractionWidth(1.4f);
+            ie.setInteractionHeight(1.8f);
             ie.setResponsive(true);
             ie.setPersistent(false);
             ie.setInvulnerable(true);
         });
 
-        MarketSlot slot = new MarketSlot(itemDisplay, textDisplay, interaction, inst, template);
+        MarketSlot slot = new MarketSlot(itemDisplay, textDisplay, interaction, inst, template, phase);
         slots.add(slot);
         interactionLookup.put(interaction.getUniqueId(), slot);
     }
 
-    private ItemStack buildItemStack(MarketItemTemplate template) {
-        ItemStack stack = new ItemStack(template.getMaterial(), 1);
+    /** Gercek esya ItemStack'ini olusturur (lore + custom model data uygulanmis). */
+    private ItemStack buildRealItemStack(MarketItemTemplate template, int amount) {
+        ItemStack stack = new ItemStack(template.getMaterial(), Math.max(1, amount));
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(ColorUtil.component(template.getDisplayName()));
             if (!template.getLore().isEmpty()) {
                 meta.lore(ColorUtil.components(template.getLore()));
+            }
+            if (template.hasCustomModelData()) {
+                meta.setCustomModelData(template.getCustomModelData());
             }
             stack.setItemMeta(meta);
         }
@@ -208,62 +231,135 @@ public final class PlayerMarket {
     }
 
     /**
-     * Hologram tasarimi (3 satir, temiz hiyerarsi):
-     *   1: &b&lEsya Adi &7×N           (ad + adet)
-     *   2: &a&l-39%  &8|  &6&l1.525$   (indirim + nihai fiyat)
-     *   3: &7Stok: &f2&7/&f3           (kalan / baslangic)
+     * Sealed (kapali) durumdaki hologram. Sadece nadirlik + "Ac" yazar.
      */
-    private Component buildHologramText(MarketItemTemplate template, MarketItemInstance inst) {
-        String coloredName = template.getDisplayName();
+    private Component buildSealedHologram(Rarity rarity) {
+        Component title = Component.text("? ? ?").color(net.kyori.adventure.text.format.NamedTextColor.WHITE)
+                .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true);
+        Component rarityLine = Component.text(rarity.getDisplayName()).color(rarity.getColor())
+                .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true);
+        Component hint = ColorUtil.component("&7&oSag tik ile ac");
+
+        return title
+                .append(Component.newline())
+                .append(rarityLine)
+                .append(Component.newline())
+                .append(hint);
+    }
+
+    /**
+     * Acik (revealed) hologram. Esya adi + lore + indirim/fiyat + stok.
+     */
+    private Component buildRevealedHologram(MarketItemTemplate template, MarketItemInstance inst) {
         int amount = Math.max(1, template.getAmount());
 
-        // 1. satir - ad + adet
-        Component nameLine = ColorUtil.component(coloredName)
+        Component nameLine = ColorUtil.component(template.getDisplayName())
                 .append(amount > 1
                         ? ColorUtil.component(" &7&l×" + amount)
                         : Component.empty());
 
-        // 2. satir - fiyat / indirim ya da TUKENDI
-        Component priceLine;
-        if (inst.isSoldOut()) {
-            priceLine = ColorUtil.component("&c&lTUKENDI");
-        } else {
-            priceLine = ColorUtil.component(
-                    "&a&l-" + inst.getDiscountPercent() + "%"
-                    + "  &8|  "
-                    + "&e&l" + formatMoney(inst.getFinalPrice()) + "$"
-            );
+        // Rarity rozeti (kucuk)
+        Rarity r = template.getRarity();
+        Component rarityBadge = Component.text("[" + r.getDisplayName() + "]")
+                .color(r.getColor())
+                .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true);
+
+        Component body = nameLine
+                .append(Component.newline())
+                .append(rarityBadge);
+
+        // Lore satirlari (varsa)
+        if (!template.getLore().isEmpty()) {
+            for (String line : template.getLore()) {
+                body = body.append(Component.newline()).append(ColorUtil.component(line));
+            }
         }
 
-        // 3. satir - stok x/y
-        Component stockLine;
+        // Bos satir + fiyat
+        body = body.append(Component.newline()).append(ColorUtil.component("&8&m            "));
+
         if (inst.isSoldOut()) {
-            stockLine = ColorUtil.component("&7Stok: &c0&8/&7" + inst.getInitialStock());
+            body = body.append(Component.newline())
+                    .append(ColorUtil.component("&c&lTUKENDI"));
         } else {
-            stockLine = ColorUtil.component(
-                    "&7Stok: &f" + inst.getRemainingStock() + "&8/&7" + inst.getInitialStock()
-            );
+            body = body.append(Component.newline())
+                    .append(ColorUtil.component(
+                            "&a&l-" + inst.getDiscountPercent() + "%"
+                            + "  &8|  "
+                            + "&e&l" + formatMoney(inst.getFinalPrice()) + "$"
+                    ));
         }
 
-        return nameLine
-                .append(Component.newline())
-                .append(priceLine)
-                .append(Component.newline())
-                .append(stockLine);
+        // Stok
+        if (inst.isSoldOut()) {
+            body = body.append(Component.newline())
+                    .append(ColorUtil.component("&7Stok: &c0&8/&7" + inst.getInitialStock()));
+        } else {
+            body = body.append(Component.newline())
+                    .append(ColorUtil.component(
+                            "&7Stok: &f" + inst.getRemainingStock() + "&8/&7" + inst.getInitialStock()
+                    ));
+        }
+
+        return body;
     }
 
     private String formatMoney(double v) {
         return MONEY_FORMAT.format(v);
     }
 
+    /**
+     * Sealed kafayi patlatip gercek esyayi ortaya cikarir.
+     * @return true ise reveal gerceklesti, false ise zaten revealed.
+     */
+    public boolean revealSlot(UUID interactionId) {
+        MarketSlot s = interactionLookup.get(interactionId);
+        if (s == null || !s.sealed) return false;
+
+        s.sealed = false;
+
+        Location loc = s.itemDisplay.getLocation();
+        // Patlama efekti
+        loc.getWorld().spawnParticle(Particle.EXPLOSION, loc, 1);
+        loc.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, loc, 1);
+        loc.getWorld().spawnParticle(Particle.FLASH, loc, 2);
+        loc.getWorld().spawnParticle(Particle.END_ROD, loc, 30, 0.3, 0.3, 0.3, 0.05);
+        loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.3f);
+        loc.getWorld().playSound(loc, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.0f);
+
+        // Esyayi gercege cevir
+        int displayAmount = Math.max(1, s.template.getAmount());
+        ItemStack realStack = buildRealItemStack(s.template, displayAmount);
+        s.itemDisplay.setItemStack(realStack);
+
+        // Boyutu hafifce ufalt (kafa cok buyuk gozukuyordu)
+        Transformation t = s.itemDisplay.getTransformation();
+        s.itemDisplay.setInterpolationDelay(0);
+        s.itemDisplay.setInterpolationDuration(8);
+        s.itemDisplay.setTransformation(new Transformation(
+                t.getTranslation(),
+                t.getLeftRotation(),
+                new Vector3f(0.95f, 0.95f, 0.95f),
+                t.getRightRotation()
+        ));
+
+        // Hologram'i guncelle
+        s.textDisplay.text(buildRevealedHologram(s.template, s.instance));
+
+        return true;
+    }
+
     /** Slot satin alma sonrasi hologramini ve item scale'ini gunceller. */
     public void refreshSlotHologram(UUID interactionId) {
         MarketSlot s = interactionLookup.get(interactionId);
         if (s == null) return;
-        s.textDisplay.text(buildHologramText(s.template, s.instance));
+        if (s.sealed) {
+            s.textDisplay.text(buildSealedHologram(s.template.getRarity()));
+        } else {
+            s.textDisplay.text(buildRevealedHologram(s.template, s.instance));
+        }
 
-        // Tukendiyse item display'i ufalt
-        if (s.instance.isSoldOut()) {
+        if (s.instance.isSoldOut() && !s.sealed) {
             Transformation t = s.itemDisplay.getTransformation();
             s.itemDisplay.setInterpolationDelay(0);
             s.itemDisplay.setInterpolationDuration(6);
@@ -294,6 +390,8 @@ public final class PlayerMarket {
 
     private void startFollowTask() {
         final int interval = Math.max(1, config.getUpdateIntervalTicks());
+        final double bobAmp = config.getBobAmplitude();
+        final double bobSpeed = config.getBobSpeed();
 
         followTask = new BukkitRunnable() {
             @Override
@@ -303,19 +401,25 @@ public final class PlayerMarket {
                     return;
                 }
 
+                tickCounter += interval;
+                double timeSec = tickCounter / 20.0;
+
                 Location[] pts = computeArcPoints(owner.getLocation());
 
                 for (int i = 0; i < slots.size(); i++) {
                     MarketSlot s = slots.get(i);
-                    Location target = pts[i];
-                    // Yaw: Billboard.CENTER sayesinde gorsel rotasyon otomatik;
-                    // entity'nin kendi yaw'i onemli degil, sifirla.
+                    Location target = pts[i].clone();
                     target.setYaw(0f);
                     target.setPitch(0f);
 
+                    // Bob efekti (sealed olanlar daha cok zipliyor)
+                    double amp = s.sealed ? bobAmp : bobAmp * 0.4;
+                    double yOffset = Math.sin(timeSec * bobSpeed + s.bobPhase) * amp;
+                    target.add(0, yOffset, 0);
+
                     s.itemDisplay.teleport(target);
 
-                    Location holoLoc = target.clone().add(0, 0.95, 0);
+                    Location holoLoc = target.clone().add(0, 1.05, 0);
                     s.textDisplay.teleport(holoLoc);
 
                     s.interaction.teleport(target);
@@ -362,5 +466,6 @@ public final class PlayerMarket {
         public MarketItemInstance instance() { return slot.instance; }
         public MarketItemTemplate template() { return slot.template; }
         public UUID interactionId() { return slot.interaction.getUniqueId(); }
+        public boolean sealed() { return slot.sealed; }
     }
 }

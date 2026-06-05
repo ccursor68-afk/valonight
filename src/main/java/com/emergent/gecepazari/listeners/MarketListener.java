@@ -79,21 +79,31 @@ public final class MarketListener implements Listener {
 
         if (!market.getOwner().getUniqueId().equals(player.getUniqueId())) return;
 
-        MarketManager.PurchaseResult result = manager.attemptPurchase(player, interaction.getUniqueId());
-        switch (result.status()) {
-            case SUCCESS -> {
-                String msg = config.getMessage("purchase-success")
-                        .replace("{item}", result.template().getDisplayName())
-                        .replace("{price}", formatMoney(result.price()));
-                player.sendMessage(ColorUtil.component(msg));
+        MarketManager.InteractionResult result = manager.handleInteraction(player, interaction.getUniqueId());
+        switch (result.type()) {
+            case REVEAL -> {
+                // Reveal'in gorsel/sesli efektleri zaten PlayerMarket icinde yapildi.
+                // Burada ek bilgilendirme mesaji vermiyoruz.
             }
-            case INSUFFICIENT_FUNDS -> {
-                String msg = config.getMessage("insufficient-funds")
-                        .replace("{price}", formatMoney(result.price()));
-                player.sendMessage(ColorUtil.component(msg));
+            case PURCHASE -> {
+                if (result.purchaseStatus() == null) return;
+                switch (result.purchaseStatus()) {
+                    case SUCCESS -> {
+                        String msg = config.getMessage("purchase-success")
+                                .replace("{item}", result.template().getDisplayName())
+                                .replace("{price}", formatMoney(result.price()));
+                        player.sendMessage(ColorUtil.component(msg));
+                    }
+                    case INSUFFICIENT_FUNDS -> {
+                        String msg = config.getMessage("insufficient-funds")
+                                .replace("{price}", formatMoney(result.price()));
+                        player.sendMessage(ColorUtil.component(msg));
+                    }
+                    case OUT_OF_STOCK -> player.sendMessage(ColorUtil.component(config.getMessage("out-of-stock")));
+                    default -> { /* sessiz */ }
+                }
             }
-            case OUT_OF_STOCK -> player.sendMessage(ColorUtil.component(config.getMessage("out-of-stock")));
-            default -> { /* sessiz */ }
+            case IGNORED -> { /* sessiz */ }
         }
     }
 

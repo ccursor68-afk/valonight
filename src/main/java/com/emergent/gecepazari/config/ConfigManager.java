@@ -2,6 +2,7 @@ package com.emergent.gecepazari.config;
 
 import com.emergent.gecepazari.GecePazariPlugin;
 import com.emergent.gecepazari.data.MarketItemTemplate;
+import com.emergent.gecepazari.data.Rarity;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -80,11 +81,19 @@ public final class ConfigManager {
             int amount = Math.max(1, s.getInt("reward.amount", 1));
             String command = s.getString("reward.command", "");
 
+            Rarity rarity = Rarity.fromString(s.getString("rarity", "SIRADAN"));
+            Integer customModelData = null;
+            if (s.isSet("custom-model-data")) {
+                int cmd = s.getInt("custom-model-data", 0);
+                if (cmd > 0) customModelData = cmd;
+            }
+
             map.put(key, new MarketItemTemplate(
                     key, material, displayName, lore,
                     basePrice, chance, maxStock,
                     minDiscount, maxDiscount,
-                    type, amount, command
+                    type, amount, command,
+                    rarity, customModelData
             ));
         }
         itemPool = Collections.unmodifiableMap(map);
@@ -171,5 +180,6 @@ public final class ConfigManager {
     public double getArcDegrees() { return plugin.getConfig().getDouble("market.arc-degrees", 160.0); }
     public int getTeleportDuration() { return plugin.getConfig().getInt("market.teleport-duration", 3); }
     public int getUpdateIntervalTicks() { return plugin.getConfig().getInt("market.update-interval-ticks", 2); }
-    public double getRotationSpeed() { return plugin.getConfig().getDouble("market.rotation-speed", 25.0); }
+    public double getBobAmplitude() { return plugin.getConfig().getDouble("market.bob-amplitude", 0.15); }
+    public double getBobSpeed() { return plugin.getConfig().getDouble("market.bob-speed", 2.5); }
 }

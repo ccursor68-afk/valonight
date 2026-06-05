@@ -146,6 +146,37 @@ public final class MarketManager {
     }
 
     /**
+     * Bir slot icin tek tiklama olayini isler:
+     *  - Slot sealed ise reveal olayini tetikler ve {@link InteractionResult#REVEAL} doner.
+     *  - Slot acik ise satin alma sonucunu doner.
+     */
+    public InteractionResult handleInteraction(Player player, UUID interactionId) {
+        PlayerMarket market = getActiveMarketByInteractionId(interactionId);
+        if (market == null || !market.getOwner().getUniqueId().equals(player.getUniqueId())) {
+            return new InteractionResult(InteractionType.IGNORED, null, null, 0);
+        }
+        PlayerMarket.MarketSlotView slot = market.findByInteraction(interactionId);
+        if (slot == null) return new InteractionResult(InteractionType.IGNORED, null, null, 0);
+
+        if (slot.sealed()) {
+            if (market.revealSlot(interactionId)) {
+                return new InteractionResult(InteractionType.REVEAL, slot.template(), null, 0);
+            }
+            return new InteractionResult(InteractionType.IGNORED, null, null, 0);
+        }
+
+        PurchaseResult pr = attemptPurchase(player, interactionId);
+        return new InteractionResult(InteractionType.PURCHASE, pr.template(), pr.status(), pr.price());
+    }
+
+    public enum InteractionType { REVEAL, PURCHASE, IGNORED }
+
+    public record InteractionResult(InteractionType type,
+                                    MarketItemTemplate template,
+                                    PurchaseStatus purchaseStatus,
+                                    double price) {}
+
+    /**
      * Bir slot icin satin alma denemesi. Tum ekonomi, stok ve odul mantigini yurutur.
      */
     public PurchaseResult attemptPurchase(Player player, UUID interactionId) {
@@ -178,6 +209,7 @@ public final class MarketManager {
             if (meta != null) {
                 meta.displayName(ColorUtil.component(template.getDisplayName()));
                 if (!template.getLore().isEmpty()) meta.lore(ColorUtil.components(template.getLore()));
+                if (template.hasCustomModelData()) meta.setCustomModelData(template.getCustomModelData());
                 give.setItemMeta(meta);
             }
             Map<Integer, ItemStack> overflow = player.getInventory().addItem(give);

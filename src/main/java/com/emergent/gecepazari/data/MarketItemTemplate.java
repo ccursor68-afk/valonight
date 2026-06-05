@@ -25,6 +25,8 @@ public final class MarketItemTemplate {
     private final RewardType rewardType;
     private final int amount;
     private final String command;
+    private final Rarity rarity;
+    private final Integer customModelData;
 
     public MarketItemTemplate(String id,
                               Material material,
@@ -37,7 +39,9 @@ public final class MarketItemTemplate {
                               int maxDiscount,
                               RewardType rewardType,
                               int amount,
-                              String command) {
+                              String command,
+                              Rarity rarity,
+                              Integer customModelData) {
         this.id = id;
         this.material = material;
         this.displayName = displayName;
@@ -50,6 +54,8 @@ public final class MarketItemTemplate {
         this.rewardType = rewardType;
         this.amount = amount;
         this.command = command == null ? "" : command;
+        this.rarity = rarity == null ? Rarity.SIRADAN : rarity;
+        this.customModelData = customModelData;
     }
 
     public String getId() { return id; }
@@ -64,4 +70,7 @@ public final class MarketItemTemplate {
     public RewardType getRewardType() { return rewardType; }
     public int getAmount() { return amount; }
     public String getCommand() { return command; }
+    public Rarity getRarity() { return rarity; }
+    public Integer getCustomModelData() { return customModelData; }
+    public boolean hasCustomModelData() { return customModelData != null; }
 }

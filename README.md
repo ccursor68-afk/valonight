@@ -1,6 +1,6 @@
 # ENightMarket
 
-Valorant tarzi **Gece Pazari** konseptini Minecraft Paper **1.21.4** icin uyarlayan, **cok dilli (TR/EN/DE)** ve **planlanabilir** bir eklentidir.
+Valorant tarzi **Gece Pazari** konseptini Minecraft **1.18 – 1.21** (tum alt surumler) icin uyarlayan, **Paper / Spigot / Bukkit** uyumlu, **cok dilli (TR/EN/DE)** ve **planlanabilir** bir eklentidir.
 
 > **Yapimci:** ArtfulMiner
 
@@ -8,23 +8,30 @@ Her oyuncuya ozel olarak rastgele 5 esya yarim ay seklinde belirir; sealed olara
 
 ---
 
+## Desteklenen Surumler
+
+| Minecraft | Sunucu yazilimi | Gorsel backend |
+|---|---|---|
+| 1.18.x – 1.19.3 | Paper, Spigot, Bukkit | ArmorStand (legacy) |
+| 1.19.4 – 1.21.x | Paper, Spigot, Bukkit | ItemDisplay + TextDisplay + Interaction |
+
+- **Java 17+** gerekir (1.20.5+ sunucular icin Java 21 onerilir)
+- **Vault** + economy provider zorunlu
+- Paper'da `hideEntity` ile kisiye ozel gorunum; Spigot/Bukkit'te diger oyuncular entity'leri gorebilir (bilgi mesaji konsola yazilir)
+
+---
+
 ## Ozellikler
 
-- **Tek butonlu Chest GUI** + `/gecepazari` ile pazara giris
+- **Tek butonlu Chest GUI** + `/gecepazari` veya `/enightmarket` ile pazara giris
 - **Yarim ay (half-moon)** seklinde 5 esya (radius/arc-degrees ayarlanabilir)
-- **Modern Display Entity'ler**: `ItemDisplay` + `TextDisplay` + `Interaction` (Armor Stand yok)
+- **Surume gore goruntuleme**: 1.19.4+ Display entity, 1.18–1.19.3 ArmorStand
 - **Pururzssuz takip**: yaw kilitli, sadece pozisyon takibi + bob animasyonu
-- **Kisiye ozel gorunum**: `Player#hideEntity` ile sadece sahibi gorur
-- **Reveal animasyonu**: 4 farkli nadirlik kafasi (SIRADAN / NADIR / DESTANSI / EFSANEVI), sag tik -> patlama -> gercek esya. Reveal kalici (2. acilista direkt esya gozukur)
-- **Agirlikli RNG + dinamik indirim**: havuzda agirlik, esya basina min-max indirim
-- **CustomModelData destegi**: hem ItemDisplay'de hem oduldeki ItemStack'te
-- **Lore in hologram**: config'deki lore satirlari hologramda da gozukur
-- **Vault entegrasyonu** (zorunlu)
-- **3 Dil**: Turkce, Ingilizce, Almanca - `/gecepazari lang <code>`
-- **Otomatik plan**: belirli gun + saat icin otomatik etkinlik baslatma, otomatik kapanis
-- **PlaceholderAPI**: scoreboard / chat icin `%enightmarket_*%` placeholderlari
-- **Shift ile kapanis** + duman efekti
-- **Asenkron Discord webhook embed**
+- **Kisiye ozel gorunum** (Paper): sadece sahibi gorur
+- **Reveal animasyonu**: 4 nadirlik kafasi, sag tik -> patlama -> gercek esya
+- **Agirlikli RNG + dinamik indirim**
+- **CustomModelData destegi**
+- **Vault**, **3 dil**, **otomatik plan**, **PlaceholderAPI**, **Discord webhook**
 
 ---
 
@@ -32,15 +39,24 @@ Her oyuncuya ozel olarak rastgele 5 esya yarim ay seklinde belirir; sealed olara
 
 | Komut | Aciklama | Yetki |
 |---|---|---|
-| `/gecepazari` | GUI'yi acar | `enightmarket.use` |
-| `/gecepazari lang <en\|tr\|de>` | Kendi dilini degistirir | `enightmarket.lang` |
-| `/gecepazari baslat` | Etkinligi baslatir + Discord | `enightmarket.admin` |
-| `/gecepazari durdur` | Etkinligi durdurur + playerdata siler | `enightmarket.admin` |
-| `/gecepazari reload` | Config + dil dosyalarini yeniden yukler | `enightmarket.admin` |
+| `/gecepazari` veya `/enightmarket` | GUI'yi acar | `enightmarket.use` |
+| `/gecepazari lang <en\|tr\|de>` | Dil degistirir | `enightmarket.lang` |
+| `/enightmarket start` | Etkinligi baslatir + Discord | `enightmarket.admin` |
+| `/enightmarket stop` | Etkinligi durdurur, pazarları kapatir | `enightmarket.admin` |
+| `/enightmarket reload` | Config + dil yeniden yukler | `enightmarket.admin` |
 
-Aliaslar: `/enightmarket`, `/nightmarket`, `/gp`, `/nm`, `/gece`
+Aliaslar: `/gp`, `/nm`, `/gece`, `/nightmarket`, `/em`
 
 ---
+
+## Kurulum
+
+1. **Paper, Spigot veya Bukkit** sunucusu (1.18+)
+2. Vault + Economy provider (EssentialsX/CMI vb.)
+3. (Opsiyonel) PlaceholderAPI
+4. `mvn clean package` -> `target/ENightMarket-1.2.0.jar`
+5. JAR'i `plugins/` klasorune at ve sunucuyu baslat
+6. `config.yml` ayarla, `/enightmarket reload`, `/enightmarket start`
 
 ## Otomatik Plan
 
@@ -57,7 +73,7 @@ schedule:
 ## Dil Sistemi
 
 - `plugins/ENightMarket/lang/en.yml`, `tr.yml`, `de.yml` JAR'dan otomatik cikartilir
-- `default-language: tr` config'de varsayilan dili belirler
+- `default-language: en` sets the default language for new players
 - Oyuncular `/gecepazari lang <code>` ile kendi dillerini secer
 - Tercih `plugins/ENightMarket/playerlang.yml` icinde saklanir
 
@@ -80,23 +96,29 @@ Scoreboard ornegi:
 &7Kalan: &a%enightmarket_time_remaining%
 ```
 
-## Kurulum
+## Bagimliliklar
 
-1. Paper 1.21.4 sunucusu
-2. Vault + Economy provider (EssentialsX/CMI vb.) zorunlu
-3. (Opsiyonel) PlaceholderAPI - placeholderlar icin
-4. `mvn clean package` -> `target/ENightMarket-1.1.0.jar`
-5. JAR'i `plugins/` klasorune at
-6. Sunucu baslatildiktan sonra `plugins/ENightMarket/config.yml` + `lang/*.yml` olusur
-7. `config.yml` icinde `discord-webhook-url`, `schedule.enabled`, `default-language` ayarla
-8. `/gecepazari reload`
-9. `/gecepazari baslat` veya plan tetiklenmesini bekle
+| Lib | Scope | Versiyon |
+|---|---|---|
+| Spigot API | provided | 1.19.4-R0.1-SNAPSHOT (derleme) |
+| Vault API | provided | 1.7 |
+| PlaceholderAPI | provided (soft-depend) | 2.11.6 |
+
+Java 17 + Maven 3.8+. Calisma: Minecraft **1.18 – 1.21** (Paper / Spigot / Bukkit).
 
 ## Mimari
 
 ```
 com.emergent.gecepazari
-├── GecePazariPlugin              # Ana sinif (DI)
+├── compat/                       # Surum & platform uyumluluk
+│   ├── ServerVersion
+│   ├── PlatformCompat            # Paper hideEntity reflection
+│   ├── ItemMetaCompat / InventoryCompat / ParticleCompat
+├── market/display/
+│   ├── ModernDisplayAdapter      # 1.19.4+ (Display entity)
+│   ├── LegacyArmorStandAdapter   # 1.18 – 1.19.3
+│   └── DisplayAdapterFactory
+├── GecePazariPlugin
 ├── commands/GecePazariCommand    # Komut + tab complete
 ├── config/ConfigManager          # config.yml tipli erisim
 ├── data/
@@ -118,20 +140,5 @@ com.emergent.gecepazari
 ├── discord/DiscordWebhook        # async HTTP POST embed
 ├── schedule/ScheduleManager      # gun + saat tabanli otomatik acilis
 ├── integration/PlaceholderHook   # PlaceholderAPI expansion
-└── util/
-    ├── ColorUtil
-    ├── ArcMath
-    └── SkullUtil                 # base64 -> PlayerProfile skull
+└── util/ SkullUtil, ColorUtil, ArcMath
 ```
-
----
-
-## Bagimliliklar
-
-| Lib | Scope | Versiyon |
-|---|---|---|
-| Paper API | provided | 1.21.4-R0.1-SNAPSHOT |
-| Vault API | provided | 1.7 |
-| PlaceholderAPI | provided (soft-depend) | 2.11.6 |
-
-Java 21 + Maven 3.8+. Build sonucu JAR: ~79 KB.

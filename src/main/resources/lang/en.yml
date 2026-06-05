@@ -6,7 +6,12 @@ prefix: "&8[&dNight Market&8] &r"
 # General
 no-permission: "&cYou don't have permission."
 player-only: "&cThis command is only for players."
-unknown-subcommand: "&7Usage: &f/gecepazari [start|stop|reload|lang]"
+unknown-subcommand: "&7Usage: &f/gecepazari [lang]"
+admin-usage: "&7Usage: &f/enightmarket &7(GUI) or &f/enightmarket <start|stop|reload>"
+admin-unknown-subcommand: "&7Usage: &f/enightmarket <start|stop|reload>"
+admin-event-started: "&aNight Market started."
+admin-event-stopped: "&aNight Market stopped."
+market-force-closed: "&7Night Market closed, your market has been removed."
 
 # Market events
 not-active: "&7There is no active Night Market right now."
@@ -47,3 +52,9 @@ schedule-status-active: "Active"
 schedule-status-inactive: "Closed"
 schedule-day-any: "Every day"
 schedule-no-schedule: "No schedule"
+
+# Rarity labels (hologram badges)
+rarity-siradan: "Common"
+rarity-nadir: "Rare"
+rarity-destansi: "Epic"
+rarity-efanevi: "Legendary"

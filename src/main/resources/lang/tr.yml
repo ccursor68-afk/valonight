@@ -6,7 +6,12 @@ prefix: "&8[&dGece Pazari&8] &r"
 # Genel
 no-permission: "&cBunun icin yetkin yok."
 player-only: "&cBu komut sadece oyuncular icin."
-unknown-subcommand: "&7Kullanim: &f/gecepazari [baslat|durdur|reload|lang]"
+unknown-subcommand: "&7Kullanim: &f/gecepazari [lang]"
+admin-usage: "&7Kullanim: &f/enightmarket &7(GUI) veya &f/enightmarket <start|stop|reload>"
+admin-unknown-subcommand: "&7Kullanim: &f/enightmarket <start|stop|reload>"
+admin-event-started: "&aGece Pazari baslatildi."
+admin-event-stopped: "&aGece Pazari durduruldu."
+market-force-closed: "&7Gece Pazari kapatildi, pazar ortadan kalkti."
 
 # Pazar olaylari
 not-active: "&7Su an aktif bir Gece Pazari yok."
@@ -47,3 +52,9 @@ schedule-status-active: "Aktif"
 schedule-status-inactive: "Kapali"
 schedule-day-any: "Her gun"
 schedule-no-schedule: "Plan yok"
+
+# Nadirlik etiketleri
+rarity-siradan: "Siradan"
+rarity-nadir: "Nadir"
+rarity-destansi: "Destansi"
+rarity-efanevi: "Efsanevi"

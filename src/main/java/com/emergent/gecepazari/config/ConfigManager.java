@@ -116,12 +116,12 @@ public final class ConfigManager {
 
     // --- Discord ---
     public String getDiscordWebhookUrl() { return plugin.getConfig().getString("discord-webhook-url", ""); }
-    public String getDiscordUsername() { return plugin.getConfig().getString("discord.username", "Gece Pazari"); }
+    public String getDiscordUsername() { return plugin.getConfig().getString("discord.username", "Night Market"); }
     public String getDiscordAvatarUrl() { return plugin.getConfig().getString("discord.avatar-url", ""); }
-    public String getDiscordEmbedTitle() { return plugin.getConfig().getString("discord.embed.title", "Gece Pazari Acildi!"); }
-    public String getDiscordEmbedDescription() { return plugin.getConfig().getString("discord.embed.description", ""); }
+    public String getDiscordEmbedTitle() { return plugin.getConfig().getString("discord.embed.title", "Night Market Is Open!"); }
+    public String getDiscordEmbedDescription() { return plugin.getConfig().getString("discord.embed.description", "Join the server and grab your personal discounts."); }
     public int getDiscordEmbedColor() { return plugin.getConfig().getInt("discord.embed.color", 13369599); }
-    public String getDiscordEmbedFooter() { return plugin.getConfig().getString("discord.embed.footer", ""); }
+    public String getDiscordEmbedFooter() { return plugin.getConfig().getString("discord.embed.footer", "ENightMarket - by ArtfulMiner"); }
     public String getDiscordEmbedThumbnail() { return plugin.getConfig().getString("discord.embed.thumbnail-url", ""); }
 
     // --- GUI (sadece material) ---

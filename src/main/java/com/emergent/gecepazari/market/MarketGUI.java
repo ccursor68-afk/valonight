@@ -1,6 +1,8 @@
 package com.emergent.gecepazari.market;
 
 import com.emergent.gecepazari.GecePazariPlugin;
+import com.emergent.gecepazari.compat.InventoryCompat;
+import com.emergent.gecepazari.compat.ItemMetaCompat;
 import com.emergent.gecepazari.config.ConfigManager;
 import com.emergent.gecepazari.lang.LanguageManager;
 import com.emergent.gecepazari.util.ColorUtil;
@@ -37,23 +39,21 @@ public final class MarketGUI implements InventoryHolder {
 
     public void open(Player player) {
         String title = lang.getRaw(player, "gui-title");
-        this.inventory = Bukkit.createInventory(this, GUI_SIZE, ColorUtil.component(title));
+        this.inventory = InventoryCompat.create(this, GUI_SIZE, title);
 
         ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta fm = filler.getItemMeta();
-        if (fm != null) {
-            fm.displayName(ColorUtil.component(" "));
-            filler.setItemMeta(fm);
-        }
+        ItemMetaCompat.setDisplayNameBlank(fm);
+        filler.setItemMeta(fm);
         for (int i = 0; i < GUI_SIZE; i++) inventory.setItem(i, filler);
 
         ItemStack button = new ItemStack(config.getGuiOpenButtonMaterial());
         ItemMeta meta = button.getItemMeta();
         if (meta != null) {
-            meta.displayName(ColorUtil.component(lang.getRaw(player, "gui-open-button-name")));
+            ItemMetaCompat.setDisplayName(meta, lang.getRaw(player, "gui-open-button-name"));
             List<String> lore = lang.getRawList(player, "gui-open-button-lore");
             if (lore != null && !lore.isEmpty()) {
-                meta.lore(ColorUtil.components(lore));
+                ItemMetaCompat.setLore(meta, lore);
             }
             button.setItemMeta(meta);
         }

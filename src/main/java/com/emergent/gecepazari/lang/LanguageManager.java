@@ -1,5 +1,6 @@
 package com.emergent.gecepazari.lang;
 
+import com.emergent.gecepazari.data.Rarity;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -87,6 +88,10 @@ public final class LanguageManager {
 
     public void setLang(UUID uuid, String code) {
         store.setLang(uuid, normalize(code));
+    }
+
+    public String getRarityName(String langCode, Rarity rarity) {
+        return getRaw(langCode, "rarity-" + rarity.name().toLowerCase());
     }
 
     /** Prefix'siz raw mesaj. */

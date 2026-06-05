@@ -1,16 +1,20 @@
 name: ENightMarket
 version: '${project.version}'
 main: com.emergent.gecepazari.GecePazariPlugin
-api-version: '1.21'
+api-version: '1.18'
 authors: [ArtfulMiner]
-description: Paper 1.21.4 icin gelistirilmis, Valorant tarzi cok dilli ve programlanabilir Gece Pazari eklentisi.
+description: Minecraft 1.18-1.21 (Paper/Spigot/Bukkit) icin Valorant tarzi cok dilli Gece Pazari eklentisi.
 depend: [Vault]
 softdepend: [PlaceholderAPI]
 commands:
   gecepazari:
-    description: Gece Pazarini acar, yonetir veya dil ayarini degistirir.
-    usage: /gecepazari [baslat|durdur|reload|lang]
-    aliases: [enightmarket, nightmarket, gp, nm, gece]
+    description: Gece Pazarini acar veya dil ayarini degistirir.
+    usage: /gecepazari [lang]
+    aliases: [nightmarket, gp, nm, gece]
+  enightmarket:
+    description: Gece Pazarini acar veya etkinligi yonetir.
+    usage: /enightmarket [start|stop|reload]
+    aliases: [em]
 permissions:
   enightmarket.use:
     description: Pazari kullanma ve GUI acma izni.
@@ -29,5 +33,5 @@ permissions:
       enightmarket.lang: true
       enightmarket.notify: true
   enightmarket.bypass:
-    description: Etkinlik kapali olsa bile pazari acabilir.
-    default: op
+    description: Etkinlik kapali olsa bile pazari acabilir (varsayilan kapali).
+    default: false

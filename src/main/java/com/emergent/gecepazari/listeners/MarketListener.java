@@ -8,11 +8,11 @@ import com.emergent.gecepazari.market.PlayerMarket;
 import com.emergent.gecepazari.util.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -45,33 +45,50 @@ public final class MarketListener implements Listener {
         if (event.getRawSlot() != MarketGUI.BUTTON_SLOT) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        if (!manager.isEventActive() && !player.hasPermission("enightmarket.bypass")) {
-            player.sendMessage(ColorUtil.component(lang.get(player, "not-active")));
+        if (!manager.isEventActive()) {
+            ColorUtil.send(player, lang.get(player, "not-active"));
+            player.closeInventory();
             return;
         }
 
         Bukkit.getScheduler().runTask(plugin, () -> {
             player.closeInventory();
-            manager.openMarket(player);
-            player.sendMessage(ColorUtil.component(lang.get(player, "market-opened")));
+            if (manager.openMarket(player) == null) {
+                ColorUtil.send(player, lang.get(player, "not-active"));
+                return;
+            }
+            ColorUtil.send(player, lang.get(player, "market-opened"));
         });
     }
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        Entity clicked = event.getRightClicked();
-        if (!(clicked instanceof Interaction interaction)) return;
+        handleMarketClick(event.getPlayer(), event.getRightClicked(), event);
+    }
 
-        PlayerMarket market = manager.getActiveMarketByInteractionId(interaction.getUniqueId());
+    @EventHandler
+    public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
+        handleMarketClick(event.getPlayer(), event.getRightClicked(), event);
+    }
+
+    private void handleMarketClick(Player player, Entity clicked, org.bukkit.event.Cancellable event) {
+        if (clicked == null) return;
+
+        PlayerMarket market = manager.getActiveMarketByInteractionId(clicked.getUniqueId());
         if (market == null) return;
 
         event.setCancelled(true);
-        Player player = event.getPlayer();
         if (!market.getOwner().getUniqueId().equals(player.getUniqueId())) return;
 
-        MarketManager.InteractionResult result = manager.handleInteraction(player, interaction.getUniqueId());
+        if (!manager.isEventActive()) {
+            ColorUtil.send(player, lang.get(player, "not-active"));
+            manager.closeMarket(player, false);
+            return;
+        }
+
+        MarketManager.InteractionResult result = manager.handleInteraction(player, clicked.getUniqueId());
         switch (result.type()) {
-            case REVEAL -> { /* gorsel/sesli efekt PlayerMarket icinde */ }
+            case REVEAL -> { /* efektler backend icinde */ }
             case PURCHASE -> {
                 if (result.purchaseStatus() == null) return;
                 switch (result.purchaseStatus()) {
@@ -79,14 +96,15 @@ public final class MarketListener implements Listener {
                         String msg = lang.get(player, "purchase-success")
                                 .replace("{item}", result.template().getDisplayName())
                                 .replace("{price}", formatMoney(result.price()));
-                        player.sendMessage(ColorUtil.component(msg));
+                        ColorUtil.send(player, msg);
                     }
                     case INSUFFICIENT_FUNDS -> {
                         String msg = lang.get(player, "insufficient-funds")
                                 .replace("{price}", formatMoney(result.price()));
-                        player.sendMessage(ColorUtil.component(msg));
+                        ColorUtil.send(player, msg);
                     }
-                    case OUT_OF_STOCK -> player.sendMessage(ColorUtil.component(lang.get(player, "out-of-stock")));
+                    case OUT_OF_STOCK -> ColorUtil.send(player, lang.get(player, "out-of-stock"));
+                    case EVENT_INACTIVE -> ColorUtil.send(player, lang.get(player, "not-active"));
                     default -> { /* sessiz */ }
                 }
             }
@@ -102,7 +120,7 @@ public final class MarketListener implements Listener {
         if (market == null) return;
 
         manager.closeMarket(player, true);
-        player.sendMessage(ColorUtil.component(lang.get(player, "market-closed")));
+        ColorUtil.send(player, lang.get(player, "market-closed"));
     }
 
     @EventHandler

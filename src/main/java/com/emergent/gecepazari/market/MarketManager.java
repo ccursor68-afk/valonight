@@ -1,6 +1,7 @@
 package com.emergent.gecepazari.market;
 
 import com.emergent.gecepazari.GecePazariPlugin;
+import com.emergent.gecepazari.compat.ItemMetaCompat;
 import com.emergent.gecepazari.config.ConfigManager;
 import com.emergent.gecepazari.data.MarketItemInstance;
 import com.emergent.gecepazari.data.MarketItemTemplate;
@@ -86,22 +87,34 @@ public final class MarketManager {
     }
 
     public boolean stopEvent() {
-        if (!eventActive) return false;
+        boolean wasActive = eventActive;
         eventActive = false;
         saveEventState();
-        // Tum aktif pazarlari kapat
-        for (PlayerMarket m : new HashMap<>(activeMarkets).values()) {
-            closeMarket(m.getOwner(), false);
-        }
-        // Tum playerdata'yi sil
+        shutdownAllMarkets();
         dataManager.deleteAll();
-        return true;
+        return wasActive;
+    }
+
+    /** Etkinlik durumundan bagimsiz olarak tum acik pazarları kapatir. */
+    public void shutdownAllMarkets() {
+        for (PlayerMarket market : new HashMap<>(activeMarkets).values()) {
+            Player owner = market.getOwner();
+            if (owner.isOnline()) {
+                owner.closeInventory();
+                ColorUtil.send(owner, lang.get(owner, "market-force-closed"));
+            }
+        }
+        closeAll(false);
     }
 
     /**
      * Oyuncunun pazarini fiziksel olarak acar. Eger oyuncunun kaydedilmis verisi yoksa RNG ile uretir.
      */
     public PlayerMarket openMarket(Player player) {
+        if (!eventActive) {
+            closeMarket(player, false);
+            return null;
+        }
         UUID id = player.getUniqueId();
         if (activeMarkets.containsKey(id)) {
             return activeMarkets.get(id);
@@ -155,6 +168,9 @@ public final class MarketManager {
      *  - Slot acik ise satin alma sonucunu doner.
      */
     public InteractionResult handleInteraction(Player player, UUID interactionId) {
+        if (!eventActive) {
+            return new InteractionResult(InteractionType.IGNORED, null, null, 0);
+        }
         PlayerMarket market = getActiveMarketByInteractionId(interactionId);
         if (market == null || !market.getOwner().getUniqueId().equals(player.getUniqueId())) {
             return new InteractionResult(InteractionType.IGNORED, null, null, 0);
@@ -186,6 +202,9 @@ public final class MarketManager {
      * Bir slot icin satin alma denemesi. Tum ekonomi, stok ve odul mantigini yurutur.
      */
     public PurchaseResult attemptPurchase(Player player, UUID interactionId) {
+        if (!eventActive) {
+            return new PurchaseResult(PurchaseStatus.EVENT_INACTIVE, null, 0);
+        }
         PlayerMarket market = getActiveMarketByInteractionId(interactionId);
         if (market == null || !market.getOwner().getUniqueId().equals(player.getUniqueId())) {
             return new PurchaseResult(PurchaseStatus.NOT_OWNER, null, 0);
@@ -213,8 +232,10 @@ public final class MarketManager {
             ItemStack give = new ItemStack(template.getMaterial(), template.getAmount());
             ItemMeta meta = give.getItemMeta();
             if (meta != null) {
-                meta.displayName(ColorUtil.component(template.getDisplayName()));
-                if (!template.getLore().isEmpty()) meta.lore(ColorUtil.components(template.getLore()));
+                ItemMetaCompat.setDisplayName(meta, template.getDisplayName());
+                if (!template.getLore().isEmpty()) {
+                    ItemMetaCompat.setLore(meta, template.getLore());
+                }
                 if (template.hasCustomModelData()) meta.setCustomModelData(template.getCustomModelData());
                 give.setItemMeta(meta);
             }
@@ -232,7 +253,7 @@ public final class MarketManager {
     }
 
     public enum PurchaseStatus {
-        SUCCESS, INSUFFICIENT_FUNDS, OUT_OF_STOCK, NOT_FOUND, NOT_OWNER
+        SUCCESS, INSUFFICIENT_FUNDS, OUT_OF_STOCK, NOT_FOUND, NOT_OWNER, EVENT_INACTIVE
     }
 
     public record PurchaseResult(PurchaseStatus status, MarketItemTemplate template, double price) {}

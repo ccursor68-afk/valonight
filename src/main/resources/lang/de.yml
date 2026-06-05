@@ -6,7 +6,12 @@ prefix: "&8[&dNachtmarkt&8] &r"
 # Allgemein
 no-permission: "&cDu hast keine Berechtigung."
 player-only: "&cDieser Befehl ist nur fuer Spieler."
-unknown-subcommand: "&7Benutzung: &f/gecepazari [start|stop|reload|lang]"
+unknown-subcommand: "&7Benutzung: &f/gecepazari [lang]"
+admin-usage: "&7Benutzung: &f/enightmarket &7(GUI) oder &f/enightmarket <start|stop|reload>"
+admin-unknown-subcommand: "&7Benutzung: &f/enightmarket <start|stop|reload>"
+admin-event-started: "&aNachtmarkt gestartet."
+admin-event-stopped: "&aNachtmarkt gestoppt."
+market-force-closed: "&7Nachtmarkt geschlossen, dein Markt wurde entfernt."
 
 # Marktereignisse
 not-active: "&7Es gibt aktuell keinen aktiven Nachtmarkt."
@@ -47,3 +52,9 @@ schedule-status-active: "Aktiv"
 schedule-status-inactive: "Geschlossen"
 schedule-day-any: "Jeden Tag"
 schedule-no-schedule: "Kein Zeitplan"
+
+# Seltenheitsstufen
+rarity-siradan: "Gewoehnlich"
+rarity-nadir: "Selten"
+rarity-destansi: "Episch"
+rarity-efanevi: "Legendaer"

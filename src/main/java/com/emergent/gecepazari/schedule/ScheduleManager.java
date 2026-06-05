@@ -136,7 +136,7 @@ public final class ScheduleManager {
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!p.hasPermission(NOTIFY_PERM)) continue;
-            p.sendMessage(ColorUtil.component(langManager.get(p, "event-auto-started")));
+            ColorUtil.send(p, langManager.get(p, "event-auto-started"));
         }
         scheduleAutoClose();
         plugin.getLogger().info("Plan tetiklendi: Gece Pazari otomatik olarak basladi.");

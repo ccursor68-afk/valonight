@@ -1,6 +1,8 @@
 package com.emergent.gecepazari;
 
+import com.emergent.gecepazari.commands.EnightMarketCommand;
 import com.emergent.gecepazari.commands.GecePazariCommand;
+import com.emergent.gecepazari.compat.ServerVersion;
 import com.emergent.gecepazari.config.ConfigManager;
 import com.emergent.gecepazari.data.PlayerDataManager;
 import com.emergent.gecepazari.discord.DiscordWebhook;
@@ -37,6 +39,13 @@ public final class GecePazariPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        if (!ServerVersion.isSupported()) {
+            getLogger().severe("ENightMarket Minecraft 1.18+ gerektirir. Mevcut surum: "
+                    + ServerVersion.getRaw());
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         // 1) Config
         this.configManager = new ConfigManager(this);
         this.configManager.load();
@@ -75,15 +84,24 @@ public final class GecePazariPlugin extends JavaPlugin {
                 this
         );
 
-        // 9) Command
+        // 9) Commands
         PluginCommand cmd = getCommand("gecepazari");
         if (cmd != null) {
-            GecePazariCommand executor = new GecePazariCommand(this, configManager, languageManager,
-                    marketManager, marketGui, webhook, scheduleManager);
+            GecePazariCommand executor = new GecePazariCommand(this, languageManager, marketManager, marketGui);
             cmd.setExecutor(executor);
             cmd.setTabCompleter(executor);
         } else {
             getLogger().warning("/gecepazari komutu kaydedilemedi (plugin.yml kontrol edin).");
+        }
+
+        PluginCommand adminCmd = getCommand("enightmarket");
+        if (adminCmd != null) {
+            EnightMarketCommand adminExecutor = new EnightMarketCommand(
+                    configManager, languageManager, marketManager, marketGui, webhook, scheduleManager);
+            adminCmd.setExecutor(adminExecutor);
+            adminCmd.setTabCompleter(adminExecutor);
+        } else {
+            getLogger().warning("/enightmarket komutu kaydedilemedi (plugin.yml kontrol edin).");
         }
 
         // 10) PlaceholderAPI (opsiyonel)
@@ -94,7 +112,10 @@ public final class GecePazariPlugin extends JavaPlugin {
             }
         }
 
-        getLogger().info("ENightMarket basariyla yuklendi. (by ArtfulMiner)");
+        getLogger().info("ENightMarket v" + getDescription().getVersion()
+                + " yuklendi (MC " + ServerVersion.getDisplayString()
+                + ", backend: " + (ServerVersion.supportsDisplayEntities() ? "Display" : "ArmorStand")
+                + "). by ArtfulMiner");
     }
 
     @Override

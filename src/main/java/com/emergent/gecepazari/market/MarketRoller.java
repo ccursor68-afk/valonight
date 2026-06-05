@@ -48,7 +48,7 @@ public final class MarketRoller {
             double finalPrice = Math.max(1.0, Math.round(t.getBasePrice() * (1.0 - discount / 100.0)));
             int stock = randomBetween(1, t.getMaxStock());
 
-            selected.add(new MarketItemInstance(t.getId(), discount, finalPrice, stock));
+            selected.add(new MarketItemInstance(t.getId(), discount, finalPrice, stock, stock));
         }
 
         return new PlayerMarketData(playerId, selected, System.currentTimeMillis());

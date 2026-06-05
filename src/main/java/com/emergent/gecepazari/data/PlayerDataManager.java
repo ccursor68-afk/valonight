@@ -52,8 +52,9 @@ public final class PlayerDataManager {
                 int discount = s.getInt("discount", 0);
                 double price = s.getDouble("final-price", 0.0);
                 int stock = s.getInt("stock", 0);
+                int initialStock = s.getInt("initial-stock", stock);
                 if (tid.isEmpty()) continue;
-                items.add(new MarketItemInstance(tid, discount, price, stock));
+                items.add(new MarketItemInstance(tid, discount, price, initialStock, stock));
             }
         }
         return new PlayerMarketData(uuid, items, createdAt);
@@ -70,6 +71,7 @@ public final class PlayerDataManager {
             yaml.set(key + ".discount", inst.getDiscountPercent());
             yaml.set(key + ".final-price", inst.getFinalPrice());
             yaml.set(key + ".stock", inst.getRemainingStock());
+            yaml.set(key + ".initial-stock", inst.getInitialStock());
             idx++;
         }
         try {

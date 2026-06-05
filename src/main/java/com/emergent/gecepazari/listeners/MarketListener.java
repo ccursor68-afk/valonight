@@ -1,7 +1,7 @@
 package com.emergent.gecepazari.listeners;
 
 import com.emergent.gecepazari.GecePazariPlugin;
-import com.emergent.gecepazari.config.ConfigManager;
+import com.emergent.gecepazari.lang.LanguageManager;
 import com.emergent.gecepazari.market.MarketGUI;
 import com.emergent.gecepazari.market.MarketManager;
 import com.emergent.gecepazari.market.PlayerMarket;
@@ -19,27 +19,19 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.Inventory;
 
-/**
- * Tum pazar olaylarini yakalar:
- *  - GUI butonuna tiklama
- *  - Interaction entity'ye sag tik (satin alma)
- *  - Shift'e basma (pazari duman efektiyle kapatir)
- *  - Cikis (pazari temizler)
- *  - Yeni katilim (diger oyuncularin pazar entity'lerini gizler)
- */
 public final class MarketListener implements Listener {
 
     private final GecePazariPlugin plugin;
-    private final ConfigManager config;
+    private final LanguageManager lang;
     private final MarketManager manager;
     private final MarketGUI gui;
 
     public MarketListener(GecePazariPlugin plugin,
-                          ConfigManager config,
+                          LanguageManager lang,
                           MarketManager manager,
                           MarketGUI gui) {
         this.plugin = plugin;
-        this.config = config;
+        this.lang = lang;
         this.manager = manager;
         this.gui = gui;
     }
@@ -53,16 +45,15 @@ public final class MarketListener implements Listener {
         if (event.getRawSlot() != MarketGUI.BUTTON_SLOT) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        if (!manager.isEventActive()) {
-            player.sendMessage(ColorUtil.component(config.getMessage("not-active")));
+        if (!manager.isEventActive() && !player.hasPermission("enightmarket.bypass")) {
+            player.sendMessage(ColorUtil.component(lang.get(player, "not-active")));
             return;
         }
 
-        // GUI'yi kapat ve pazari fiziksel olarak ac
         Bukkit.getScheduler().runTask(plugin, () -> {
             player.closeInventory();
             manager.openMarket(player);
-            player.sendMessage(ColorUtil.component(config.getMessage("market-opened")));
+            player.sendMessage(ColorUtil.component(lang.get(player, "market-opened")));
         });
     }
 
@@ -76,30 +67,26 @@ public final class MarketListener implements Listener {
 
         event.setCancelled(true);
         Player player = event.getPlayer();
-
         if (!market.getOwner().getUniqueId().equals(player.getUniqueId())) return;
 
         MarketManager.InteractionResult result = manager.handleInteraction(player, interaction.getUniqueId());
         switch (result.type()) {
-            case REVEAL -> {
-                // Reveal'in gorsel/sesli efektleri zaten PlayerMarket icinde yapildi.
-                // Burada ek bilgilendirme mesaji vermiyoruz.
-            }
+            case REVEAL -> { /* gorsel/sesli efekt PlayerMarket icinde */ }
             case PURCHASE -> {
                 if (result.purchaseStatus() == null) return;
                 switch (result.purchaseStatus()) {
                     case SUCCESS -> {
-                        String msg = config.getMessage("purchase-success")
+                        String msg = lang.get(player, "purchase-success")
                                 .replace("{item}", result.template().getDisplayName())
                                 .replace("{price}", formatMoney(result.price()));
                         player.sendMessage(ColorUtil.component(msg));
                     }
                     case INSUFFICIENT_FUNDS -> {
-                        String msg = config.getMessage("insufficient-funds")
+                        String msg = lang.get(player, "insufficient-funds")
                                 .replace("{price}", formatMoney(result.price()));
                         player.sendMessage(ColorUtil.component(msg));
                     }
-                    case OUT_OF_STOCK -> player.sendMessage(ColorUtil.component(config.getMessage("out-of-stock")));
+                    case OUT_OF_STOCK -> player.sendMessage(ColorUtil.component(lang.get(player, "out-of-stock")));
                     default -> { /* sessiz */ }
                 }
             }
@@ -115,19 +102,17 @@ public final class MarketListener implements Listener {
         if (market == null) return;
 
         manager.closeMarket(player, true);
-        player.sendMessage(ColorUtil.component(config.getMessage("market-closed")));
+        player.sendMessage(ColorUtil.component(lang.get(player, "market-closed")));
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        manager.closeMarket(player, false);
+        manager.closeMarket(event.getPlayer(), false);
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player joiner = event.getPlayer();
-        // Diger oyunculara ait aktif pazarlari yeni katilan oyuncudan gizle
         for (PlayerMarket m : manager.getActiveMarkets()) {
             if (m.getOwner().getUniqueId().equals(joiner.getUniqueId())) continue;
             m.hideFrom(joiner);

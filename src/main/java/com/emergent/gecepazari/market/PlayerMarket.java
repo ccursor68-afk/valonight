@@ -6,6 +6,7 @@ import com.emergent.gecepazari.data.MarketItemInstance;
 import com.emergent.gecepazari.data.MarketItemTemplate;
 import com.emergent.gecepazari.data.PlayerMarketData;
 import com.emergent.gecepazari.data.Rarity;
+import com.emergent.gecepazari.lang.LanguageManager;
 import com.emergent.gecepazari.util.ArcMath;
 import com.emergent.gecepazari.util.ColorUtil;
 import com.emergent.gecepazari.util.SkullUtil;
@@ -77,6 +78,7 @@ public final class PlayerMarket {
 
     private final GecePazariPlugin plugin;
     private final ConfigManager config;
+    private final LanguageManager lang;
     private final Player owner;
     private final PlayerMarketData data;
 
@@ -89,10 +91,12 @@ public final class PlayerMarket {
 
     public PlayerMarket(GecePazariPlugin plugin,
                         ConfigManager config,
+                        LanguageManager lang,
                         Player owner,
                         PlayerMarketData data) {
         this.plugin = plugin;
         this.config = config;
+        this.lang = lang;
         this.owner = owner;
         this.data = data;
     }
@@ -237,25 +241,33 @@ public final class PlayerMarket {
 
     /**
      * Sealed (kapali) durumdaki hologram. Sadece nadirlik + "Ac" yazar.
+     * Metinler oyuncunun secili dilinden cekilir.
      */
     private Component buildSealedHologram(Rarity rarity) {
-        Component title = Component.text("? ? ?").color(net.kyori.adventure.text.format.NamedTextColor.WHITE)
-                .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true);
+        String langCode = lang.getLangFor(owner.getUniqueId());
+        String mystery = lang.getRaw(langCode, "sealed-mystery");
+        String hint = lang.getRaw(langCode, "sealed-hint");
+
+        Component title = ColorUtil.component("&f&l" + mystery);
         Component rarityLine = Component.text(rarity.getDisplayName()).color(rarity.getColor())
                 .decoration(net.kyori.adventure.text.format.TextDecoration.BOLD, true);
-        Component hint = ColorUtil.component("&7&oSag tik ile ac");
+        Component hintLine = ColorUtil.component(hint);
 
         return title
                 .append(Component.newline())
                 .append(rarityLine)
                 .append(Component.newline())
-                .append(hint);
+                .append(hintLine);
     }
 
     /**
      * Acik (revealed) hologram. Esya adi + lore + indirim/fiyat + stok.
      */
     private Component buildRevealedHologram(MarketItemTemplate template, MarketItemInstance inst) {
+        String langCode = lang.getLangFor(owner.getUniqueId());
+        String stockLabel = lang.getRaw(langCode, "stock-label");
+        String soldOutTag = lang.getRaw(langCode, "sold-out-tag");
+
         int amount = Math.max(1, template.getAmount());
 
         Component nameLine = ColorUtil.component(template.getDisplayName())
@@ -263,7 +275,6 @@ public final class PlayerMarket {
                         ? ColorUtil.component(" &7&l×" + amount)
                         : Component.empty());
 
-        // Rarity rozeti (kucuk)
         Rarity r = template.getRarity();
         Component rarityBadge = Component.text("[" + r.getDisplayName() + "]")
                 .color(r.getColor())
@@ -273,19 +284,17 @@ public final class PlayerMarket {
                 .append(Component.newline())
                 .append(rarityBadge);
 
-        // Lore satirlari (varsa)
         if (!template.getLore().isEmpty()) {
             for (String line : template.getLore()) {
                 body = body.append(Component.newline()).append(ColorUtil.component(line));
             }
         }
 
-        // Bos satir + fiyat
         body = body.append(Component.newline()).append(ColorUtil.component("&8&m            "));
 
         if (inst.isSoldOut()) {
             body = body.append(Component.newline())
-                    .append(ColorUtil.component("&c&lTUKENDI"));
+                    .append(ColorUtil.component(soldOutTag));
         } else {
             body = body.append(Component.newline())
                     .append(ColorUtil.component(
@@ -295,14 +304,15 @@ public final class PlayerMarket {
                     ));
         }
 
-        // Stok
         if (inst.isSoldOut()) {
             body = body.append(Component.newline())
-                    .append(ColorUtil.component("&7Stok: &c0&8/&7" + inst.getInitialStock()));
+                    .append(ColorUtil.component(
+                            "&7" + stockLabel + ": &c0&8/&7" + inst.getInitialStock()));
         } else {
             body = body.append(Component.newline())
                     .append(ColorUtil.component(
-                            "&7Stok: &f" + inst.getRemainingStock() + "&8/&7" + inst.getInitialStock()
+                            "&7" + stockLabel + ": &f" + inst.getRemainingStock()
+                            + "&8/&7" + inst.getInitialStock()
                     ));
         }
 

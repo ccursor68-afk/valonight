@@ -1,0 +1,49 @@
+# =====================================================
+# ENightMarket - English Language File
+# =====================================================
+prefix: "&8[&dNight Market&8] &r"
+
+# General
+no-permission: "&cYou don't have permission."
+player-only: "&cThis command is only for players."
+unknown-subcommand: "&7Usage: &f/gecepazari [start|stop|reload|lang]"
+
+# Market events
+not-active: "&7There is no active Night Market right now."
+market-opened: "&dThe market has appeared before you. Look around!"
+market-closed: "&7The market vanished into the mist."
+purchase-success: "&aPurchased: &f{item} &7- &6{price}$"
+insufficient-funds: "&cYou don't have enough money. Required: &6{price}$"
+out-of-stock: "&cThis item is sold out."
+event-started: "&d&lNight Market is opening! &7Type /gecepazari to browse."
+event-already-active: "&eNight Market is already active."
+event-not-active: "&eNight Market is already closed."
+event-stopped: "&7Night Market has been closed."
+event-auto-started: "&d&lNight Market opened automatically! &7Hurry up."
+reload-success: "&aConfiguration has been reloaded."
+
+# Language
+lang-changed: "&aLanguage changed to &fEnglish&a."
+lang-invalid: "&cInvalid language. Available: &f{langs}"
+lang-current: "&7Your language: &f{lang}"
+lang-usage: "&7Usage: &f/gecepazari lang <en|tr|de>"
+
+# GUI
+gui-title: "&8&lNight Market"
+gui-open-button-name: "&d&lOpen Market"
+gui-open-button-lore:
+  - "&7Click to reveal your personal market."
+  - ""
+  - "&8Only for tonight..."
+
+# Hologram (sealed = unrevealed mystery skull)
+sealed-mystery: "? ? ?"
+sealed-hint: "&7&oRight-click to reveal"
+sold-out-tag: "&c&lSOLD OUT"
+stock-label: "Stock"
+
+# Schedule placeholders (used by PlaceholderAPI)
+schedule-status-active: "Active"
+schedule-status-inactive: "Closed"
+schedule-day-any: "Every day"
+schedule-no-schedule: "No schedule"

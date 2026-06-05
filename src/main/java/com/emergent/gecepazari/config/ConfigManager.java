@@ -15,12 +15,12 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * config.yml'i okur ve guclu sekilde tipli erisim saglar.
+ * config.yml'i okur ve tipli erisim saglar.
+ * Mesajlar ve GUI metinleri artik {@link com.emergent.gecepazari.lang.LanguageManager} uzerinden alinir.
  */
 public final class ConfigManager {
 
     private final GecePazariPlugin plugin;
-
     private Map<String, MarketItemTemplate> itemPool = Collections.emptyMap();
 
     public ConfigManager(GecePazariPlugin plugin) {
@@ -33,9 +33,7 @@ public final class ConfigManager {
         loadItemPool();
     }
 
-    public void reload() {
-        load();
-    }
+    public void reload() { load(); }
 
     private void loadItemPool() {
         Map<String, MarketItemTemplate> map = new LinkedHashMap<>();
@@ -100,81 +98,40 @@ public final class ConfigManager {
         plugin.getLogger().info("Yuklenen esya sayisi: " + itemPool.size());
     }
 
-    public Map<String, MarketItemTemplate> getItemPool() {
-        return itemPool;
+    // --- Pool erisim ---
+    public Map<String, MarketItemTemplate> getItemPool() { return itemPool; }
+    public MarketItemTemplate getTemplate(String id) { return itemPool.get(id); }
+    public List<MarketItemTemplate> getItemPoolList() { return new ArrayList<>(itemPool.values()); }
+
+    // --- Dil ---
+    public String getDefaultLanguage() {
+        return plugin.getConfig().getString("default-language", "en");
     }
 
-    public MarketItemTemplate getTemplate(String id) {
-        return itemPool.get(id);
-    }
+    // --- Schedule ---
+    public boolean isScheduleEnabled() { return plugin.getConfig().getBoolean("schedule.enabled", false); }
+    public String getScheduleDay() { return plugin.getConfig().getString("schedule.day", "ANY"); }
+    public String getScheduleTime() { return plugin.getConfig().getString("schedule.time", "20:00"); }
+    public long getAutoCloseAfterHours() { return plugin.getConfig().getLong("schedule.auto-close-after-hours", 0L); }
 
-    public List<MarketItemTemplate> getItemPoolList() {
-        return new ArrayList<>(itemPool.values());
-    }
+    // --- Discord ---
+    public String getDiscordWebhookUrl() { return plugin.getConfig().getString("discord-webhook-url", ""); }
+    public String getDiscordUsername() { return plugin.getConfig().getString("discord.username", "Gece Pazari"); }
+    public String getDiscordAvatarUrl() { return plugin.getConfig().getString("discord.avatar-url", ""); }
+    public String getDiscordEmbedTitle() { return plugin.getConfig().getString("discord.embed.title", "Gece Pazari Acildi!"); }
+    public String getDiscordEmbedDescription() { return plugin.getConfig().getString("discord.embed.description", ""); }
+    public int getDiscordEmbedColor() { return plugin.getConfig().getInt("discord.embed.color", 13369599); }
+    public String getDiscordEmbedFooter() { return plugin.getConfig().getString("discord.embed.footer", ""); }
+    public String getDiscordEmbedThumbnail() { return plugin.getConfig().getString("discord.embed.thumbnail-url", ""); }
 
-    public String getMessage(String key) {
-        String prefix = plugin.getConfig().getString("messages.prefix", "");
-        String msg = plugin.getConfig().getString("messages." + key, "");
-        return prefix + msg;
-    }
-
-    public String getRawMessage(String key) {
-        return plugin.getConfig().getString("messages." + key, "");
-    }
-
-    public String getDiscordWebhookUrl() {
-        return plugin.getConfig().getString("discord-webhook-url", "");
-    }
-
-    public String getDiscordUsername() {
-        return plugin.getConfig().getString("discord.username", "Gece Pazari");
-    }
-
-    public String getDiscordAvatarUrl() {
-        return plugin.getConfig().getString("discord.avatar-url", "");
-    }
-
-    public String getDiscordEmbedTitle() {
-        return plugin.getConfig().getString("discord.embed.title", "Gece Pazari Acildi!");
-    }
-
-    public String getDiscordEmbedDescription() {
-        return plugin.getConfig().getString("discord.embed.description", "");
-    }
-
-    public int getDiscordEmbedColor() {
-        return plugin.getConfig().getInt("discord.embed.color", 13369599);
-    }
-
-    public String getDiscordEmbedFooter() {
-        return plugin.getConfig().getString("discord.embed.footer", "");
-    }
-
-    public String getDiscordEmbedThumbnail() {
-        return plugin.getConfig().getString("discord.embed.thumbnail-url", "");
-    }
-
-    public String getGuiTitle() {
-        return plugin.getConfig().getString("gui.title", "&8&lGece Pazari");
-    }
-
+    // --- GUI (sadece material) ---
     public Material getGuiOpenButtonMaterial() {
         String name = plugin.getConfig().getString("gui.open-button.material", "NETHER_STAR");
-        try {
-            return Material.valueOf(name.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            return Material.NETHER_STAR;
-        }
+        try { return Material.valueOf(name.toUpperCase()); }
+        catch (IllegalArgumentException ex) { return Material.NETHER_STAR; }
     }
 
-    public String getGuiOpenButtonName() {
-        return plugin.getConfig().getString("gui.open-button.name", "&d&lPazari Ac");
-    }
-
-    public List<String> getGuiOpenButtonLore() {
-        return plugin.getConfig().getStringList("gui.open-button.lore");
-    }
-
+    // --- Market gorsel ---
     public double getRadius() { return plugin.getConfig().getDouble("market.radius", 4.5); }
     public double getHeightOffset() { return plugin.getConfig().getDouble("market.height-offset", 0.2); }
     public double getArcDegrees() { return plugin.getConfig().getDouble("market.arc-degrees", 150.0); }

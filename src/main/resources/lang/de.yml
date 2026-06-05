@@ -1,0 +1,49 @@
+# =====================================================
+# ENightMarket - Deutsche Sprachdatei
+# =====================================================
+prefix: "&8[&dNachtmarkt&8] &r"
+
+# Allgemein
+no-permission: "&cDu hast keine Berechtigung."
+player-only: "&cDieser Befehl ist nur fuer Spieler."
+unknown-subcommand: "&7Benutzung: &f/gecepazari [start|stop|reload|lang]"
+
+# Marktereignisse
+not-active: "&7Es gibt aktuell keinen aktiven Nachtmarkt."
+market-opened: "&dDer Markt ist vor dir erschienen. Sieh dich um!"
+market-closed: "&7Der Markt ist im Nebel verschwunden."
+purchase-success: "&aGekauft: &f{item} &7- &6{price}$"
+insufficient-funds: "&cDu hast nicht genug Geld. Benoetigt: &6{price}$"
+out-of-stock: "&cDieser Gegenstand ist ausverkauft."
+event-started: "&d&lDer Nachtmarkt oeffnet! &7Tippe /gecepazari um zu stoebern."
+event-already-active: "&eDer Nachtmarkt ist bereits aktiv."
+event-not-active: "&eDer Nachtmarkt ist bereits geschlossen."
+event-stopped: "&7Der Nachtmarkt wurde geschlossen."
+event-auto-started: "&d&lDer Nachtmarkt hat automatisch geoeffnet! &7Beeil dich."
+reload-success: "&aKonfiguration wurde neu geladen."
+
+# Sprache
+lang-changed: "&aSprache wurde auf &fDeutsch&a gesetzt."
+lang-invalid: "&cUngueltige Sprache. Verfuegbar: &f{langs}"
+lang-current: "&7Deine Sprache: &f{lang}"
+lang-usage: "&7Benutzung: &f/gecepazari lang <en|tr|de>"
+
+# GUI
+gui-title: "&8&lNachtmarkt"
+gui-open-button-name: "&d&lMarkt oeffnen"
+gui-open-button-lore:
+  - "&7Klicke, um deinen Markt zu enthuellen."
+  - ""
+  - "&8Nur fuer heute Nacht..."
+
+# Hologramm
+sealed-mystery: "? ? ?"
+sealed-hint: "&7&oRechtsklick zum Enthuellen"
+sold-out-tag: "&c&lAUSVERKAUFT"
+stock-label: "Bestand"
+
+# Zeitplan Platzhalter
+schedule-status-active: "Aktiv"
+schedule-status-inactive: "Geschlossen"
+schedule-day-any: "Jeden Tag"
+schedule-no-schedule: "Kein Zeitplan"

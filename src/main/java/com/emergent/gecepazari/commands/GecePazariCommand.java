@@ -3,8 +3,10 @@ package com.emergent.gecepazari.commands;
 import com.emergent.gecepazari.GecePazariPlugin;
 import com.emergent.gecepazari.config.ConfigManager;
 import com.emergent.gecepazari.discord.DiscordWebhook;
+import com.emergent.gecepazari.lang.LanguageManager;
 import com.emergent.gecepazari.market.MarketGUI;
 import com.emergent.gecepazari.market.MarketManager;
+import com.emergent.gecepazari.schedule.ScheduleManager;
 import com.emergent.gecepazari.util.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -21,25 +23,34 @@ import java.util.List;
 
 public final class GecePazariCommand implements CommandExecutor, TabCompleter {
 
-    private static final String ADMIN_PERM = "gecepazari.admin";
-    private static final String USE_PERM = "gecepazari.use";
+    private static final String USE_PERM = "enightmarket.use";
+    private static final String ADMIN_PERM = "enightmarket.admin";
+    private static final String LANG_PERM = "enightmarket.lang";
+    private static final String NOTIFY_PERM = "enightmarket.notify";
+    private static final String BYPASS_PERM = "enightmarket.bypass";
 
     private final GecePazariPlugin plugin;
     private final ConfigManager config;
+    private final LanguageManager lang;
     private final MarketManager manager;
     private final MarketGUI gui;
     private final DiscordWebhook webhook;
+    private final ScheduleManager scheduler;
 
     public GecePazariCommand(GecePazariPlugin plugin,
                              ConfigManager config,
+                             LanguageManager lang,
                              MarketManager manager,
                              MarketGUI gui,
-                             DiscordWebhook webhook) {
+                             DiscordWebhook webhook,
+                             ScheduleManager scheduler) {
         this.plugin = plugin;
         this.config = config;
+        this.lang = lang;
         this.manager = manager;
         this.gui = gui;
         this.webhook = webhook;
+        this.scheduler = scheduler;
     }
 
     @Override
@@ -56,23 +67,23 @@ public final class GecePazariCommand implements CommandExecutor, TabCompleter {
             case "baslat", "start" -> handleStart(sender);
             case "durdur", "stop" -> handleStop(sender);
             case "reload" -> handleReload(sender);
-            default -> sender.sendMessage(ColorUtil.component(
-                    "&7Kullanim: &f/gecepazari [baslat|durdur|reload]"));
+            case "lang", "language", "dil" -> handleLang(sender, args);
+            default -> sender.sendMessage(ColorUtil.component(lang.get(sender, "unknown-subcommand")));
         }
         return true;
     }
 
     private void handleOpenGui(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ColorUtil.component(config.getMessage("player-only")));
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "player-only")));
             return;
         }
         if (!player.hasPermission(USE_PERM)) {
-            player.sendMessage(ColorUtil.component(config.getMessage("no-permission")));
+            player.sendMessage(ColorUtil.component(lang.get(player, "no-permission")));
             return;
         }
-        if (!manager.isEventActive()) {
-            player.sendMessage(ColorUtil.component(config.getMessage("not-active")));
+        if (!manager.isEventActive() && !player.hasPermission(BYPASS_PERM)) {
+            player.sendMessage(ColorUtil.component(lang.get(player, "not-active")));
             return;
         }
         gui.open(player);
@@ -80,40 +91,71 @@ public final class GecePazariCommand implements CommandExecutor, TabCompleter {
 
     private void handleStart(CommandSender sender) {
         if (!sender.hasPermission(ADMIN_PERM)) {
-            sender.sendMessage(ColorUtil.component(config.getMessage("no-permission")));
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "no-permission")));
             return;
         }
         if (!manager.startEvent()) {
-            sender.sendMessage(ColorUtil.component(config.getMessage("event-already-active")));
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "event-already-active")));
             return;
         }
-        // Tum oyuncuya duyur
         for (Player p : Bukkit.getOnlinePlayers()) {
-            p.sendMessage(ColorUtil.component(config.getMessage("event-started")));
+            if (!p.hasPermission(NOTIFY_PERM)) continue;
+            p.sendMessage(ColorUtil.component(lang.get(p, "event-started")));
         }
-        // Discord webhook (asenkron)
         webhook.sendEventStartedEmbed();
     }
 
     private void handleStop(CommandSender sender) {
         if (!sender.hasPermission(ADMIN_PERM)) {
-            sender.sendMessage(ColorUtil.component(config.getMessage("no-permission")));
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "no-permission")));
             return;
         }
         if (!manager.stopEvent()) {
-            sender.sendMessage(ColorUtil.component(config.getMessage("event-not-active")));
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "event-not-active")));
             return;
         }
-        sender.sendMessage(ColorUtil.component(config.getMessage("event-stopped")));
+        sender.sendMessage(ColorUtil.component(lang.get(sender, "event-stopped")));
     }
 
     private void handleReload(CommandSender sender) {
         if (!sender.hasPermission(ADMIN_PERM)) {
-            sender.sendMessage(ColorUtil.component(config.getMessage("no-permission")));
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "no-permission")));
             return;
         }
         config.reload();
-        sender.sendMessage(ColorUtil.component(config.getMessage("reload-success")));
+        lang.reload(config.getDefaultLanguage());
+        scheduler.stop();
+        scheduler.start();
+        sender.sendMessage(ColorUtil.component(lang.get(sender, "reload-success")));
+    }
+
+    private void handleLang(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(ColorUtil.component(lang.get(sender, "player-only")));
+            return;
+        }
+        if (!player.hasPermission(LANG_PERM)) {
+            player.sendMessage(ColorUtil.component(lang.get(player, "no-permission")));
+            return;
+        }
+        if (args.length < 2) {
+            // Mevcut dili goster + kullanim
+            String current = lang.getLangFor(player);
+            player.sendMessage(ColorUtil.component(
+                    lang.get(player, "lang-current").replace("{lang}", current)));
+            player.sendMessage(ColorUtil.component(lang.get(player, "lang-usage")));
+            return;
+        }
+        String code = args[1].toLowerCase();
+        if (!lang.isSupported(code)) {
+            String langs = String.join(", ", lang.getSupportedCodes());
+            player.sendMessage(ColorUtil.component(
+                    lang.get(player, "lang-invalid").replace("{langs}", langs)));
+            return;
+        }
+        lang.setLang(player.getUniqueId(), code);
+        // Yeni dilde tesekkur mesaji
+        player.sendMessage(ColorUtil.component(lang.get(player, "lang-changed")));
     }
 
     @Override
@@ -123,15 +165,22 @@ public final class GecePazariCommand implements CommandExecutor, TabCompleter {
                                       @NotNull String[] args) {
         if (args.length == 1) {
             List<String> base = new ArrayList<>();
+            base.add("lang");
             if (sender.hasPermission(ADMIN_PERM)) {
                 base.addAll(Arrays.asList("baslat", "durdur", "reload"));
             }
-            List<String> filtered = new ArrayList<>();
-            for (String s : base) {
-                if (s.startsWith(args[0].toLowerCase())) filtered.add(s);
-            }
-            return filtered;
+            return filter(base, args[0]);
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("lang")) {
+            return filter(Arrays.asList(lang.getSupportedCodes()), args[1]);
         }
         return Collections.emptyList();
+    }
+
+    private List<String> filter(List<String> options, String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (String s : options) if (s.toLowerCase().startsWith(lower)) out.add(s);
+        return out;
     }
 }

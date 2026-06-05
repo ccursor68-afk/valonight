@@ -1,0 +1,49 @@
+# =====================================================
+# ENightMarket - Turkce Dil Dosyasi
+# =====================================================
+prefix: "&8[&dGece Pazari&8] &r"
+
+# Genel
+no-permission: "&cBunun icin yetkin yok."
+player-only: "&cBu komut sadece oyuncular icin."
+unknown-subcommand: "&7Kullanim: &f/gecepazari [baslat|durdur|reload|lang]"
+
+# Pazar olaylari
+not-active: "&7Su an aktif bir Gece Pazari yok."
+market-opened: "&dPazar onunde belirdi. Etrafina bak!"
+market-closed: "&7Pazar sis icinde kayboldu."
+purchase-success: "&aSatin alindi: &f{item} &7- &6{price}$"
+insufficient-funds: "&cYeterli paran yok. Gerekli: &6{price}$"
+out-of-stock: "&cBu esya tukendi."
+event-started: "&d&lGece Pazari aciliyor! &7/gecepazari yazarak goz at."
+event-already-active: "&eGece Pazari zaten aktif."
+event-not-active: "&eGece Pazari zaten kapali."
+event-stopped: "&7Gece Pazari kapatildi."
+event-auto-started: "&d&lGece Pazari otomatik olarak acildi! &7Acele et."
+reload-success: "&aYapilandirma yeniden yuklendi."
+
+# Dil
+lang-changed: "&aDil &fTurkce&a olarak ayarlandi."
+lang-invalid: "&cGecersiz dil. Kullanilabilir: &f{langs}"
+lang-current: "&7Mevcut dilin: &f{lang}"
+lang-usage: "&7Kullanim: &f/gecepazari lang <en|tr|de>"
+
+# GUI
+gui-title: "&8&lGece Pazari"
+gui-open-button-name: "&d&lPazari Ac"
+gui-open-button-lore:
+  - "&7Tikla, sana ozel pazari ortaya cikar."
+  - ""
+  - "&8Sadece bu gece..."
+
+# Hologram (sealed)
+sealed-mystery: "? ? ?"
+sealed-hint: "&7&oSag tik ile ac"
+sold-out-tag: "&c&lTUKENDI"
+stock-label: "Stok"
+
+# Schedule placeholderlar
+schedule-status-active: "Aktif"
+schedule-status-inactive: "Kapali"
+schedule-day-any: "Her gun"
+schedule-no-schedule: "Plan yok"

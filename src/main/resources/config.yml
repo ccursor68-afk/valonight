@@ -1,90 +1,86 @@
 # ============================================================
-#  Gece Pazari - Yapilandirma Dosyasi
+#  ENightMarket - Yapilandirma Dosyasi
+#  Yapimci: ArtfulMiner
 # ============================================================
-# Etkinlik suresince her oyuncunun pazari sabittir.
-# Pazar acildiginda asagidaki havuzdan agirlikli sans ile 5 esya secilir.
+# Tum oyuncu mesajlari ve GUI metinleri plugins/ENightMarket/lang/*.yml
+# dosyalarinda tutulur. Oyuncular /gecepazari lang <en|tr|de> ile
+# kendi dillerini secebilir.
 # ------------------------------------------------------------
+
+# Varsayilan dil (yeni oyuncular icin). en | tr | de
+default-language: tr
+
+# ------------------------------------------------------------
+# Otomatik acilis plani
+# ------------------------------------------------------------
+# Belirlenen gun + saatte etkinligi otomatik baslatir.
+# Discord webhook'u da bu sirada gonderilir.
+# ------------------------------------------------------------
+schedule:
+  # Plan etkin mi?
+  enabled: false
+
+  # Hangi gun acilacak?
+  # Gecerli degerler: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+  # Her gun acilmasi icin: ANY
+  day: FRIDAY
+
+  # Saat (24 saat formatinda, HH:mm)
+  time: "20:00"
+
+  # Otomatik kapanis (saat cinsinden). 0 ise sadece manuel /gecepazari durdur ile kapanir.
+  # Ornek: 24 -> 24 saat sonra otomatik kapanir.
+  auto-close-after-hours: 24
 
 # Discord Webhook URL'sini buraya girin (bos birakirsaniz devre disi kalir).
 discord-webhook-url: ""
 
-# Pazar GUI ayarlari
-gui:
-  title: "&8&lGece Pazari"
-  open-button:
-    material: NETHER_STAR
-    name: "&d&lPazari Ac"
-    lore:
-      - "&7Tikla, sana ozel pazari ortaya cikar."
-      - ""
-      - "&8Sadece bu gece..."
-
 # Pazar mekanik ayarlari
 market:
-  # Oyuncunun etrafindaki yarim ay yaricapi (blok). Hologramlarin ic ice girmemesi icin 4.5+ onerilir.
+  # Oyuncunun etrafindaki yarim ay yaricapi (blok). 4.5+ onerilir.
   radius: 4.5
-  # Oyuncunun bakis yonunde yarim ay'in ortalama yuksekligi (goz hizasina gore offset)
+  # Goz hizasina gore y offset
   height-offset: 0.2
-  # Yarim ayin acisi (derece olarak). 180 = tam yari cember.
+  # Yarim ayin acisi (derece). 180 = tam yari cember.
   arc-degrees: 150.0
-  # Esyalarin oyuncuya gore sabitlendigi mesafe icin yumusatma (tick cinsinden)
+  # Display teleport interpolasyonu (tick)
   teleport-duration: 3
   # Pozisyon guncelleme tick araligi
   update-interval-ticks: 2
-  # Kafalarin asagi-yukari bob yapma siddeti (blok cinsinden, 0 = kapali)
+  # Asagi-yukari bob siddeti (0 = kapali)
   bob-amplitude: 0.15
   # Bob hizi (radyan/sn)
   bob-speed: 2.5
 
-# Etkinlik mesajlari
-messages:
-  prefix: "&8[&dGece Pazari&8] &r"
-  no-permission: "&cBunun icin yetkin yok."
-  player-only: "&cBu komut sadece oyuncular icin."
-  not-active: "&7Su an aktif bir Gece Pazari yok."
-  market-opened: "&dPazar onunde belirdi. Etrafina bak!"
-  market-closed: "&7Pazar sis icinde kayboldu."
-  purchase-success: "&aSatin alindi: &f{item} &7- &6{price}$"
-  insufficient-funds: "&cYeterli paran yok. Gerekli: &6{price}$"
-  out-of-stock: "&cBu esya tukendi."
-  event-started: "&d&lGece Pazari aciliyor! &7/gecepazari yazarak goz at."
-  event-already-active: "&eGece Pazari zaten aktif."
-  event-not-active: "&eGece Pazari zaten kapali."
-  event-stopped: "&7Gece Pazari kapatildi."
-  reload-success: "&aYapilandirma yeniden yuklendi."
-
-# Discord embed yapilandirmasi
+# Discord embed yapilandirmasi (sunucu bazli, dile bagli degil)
 discord:
   username: "Gece Pazari"
   avatar-url: ""
   embed:
     title: "Gece Pazari Acildi!"
     description: "Hemen sunucuya gir ve sana ozel indirimleri yakala. Pazar yalnizca bu gece acik!"
-    color: 13369599   # mor/pembe ton
-    footer: "Gece Pazari - Sadece bu gece"
+    color: 13369599
+    footer: "ENightMarket - by ArtfulMiner"
     thumbnail-url: ""
 
 # ------------------------------------------------------------
 #  Esya Havuzu
 # ------------------------------------------------------------
 # Her esya icin:
-#   material         : Minecraft eşya turu (Bukkit Material enum)
-#   display-name     : Hologramda ve envanterde gozukecek ad (renk kodu destekli)
-#   lore             : Hologramda alt satirlarda gosterilecek aciklamalar
+#   material         : Bukkit Material
+#   display-name     : Hologram ve envanterde gozukecek ad (& renk kodu)
+#   lore             : Hologramda gosterilecek satirlar
 #   base-price       : Indirim oncesi temel fiyat
-#   chance           : Havuzdan secilme agirligi (yuksek = daha sik)
+#   chance           : Havuzdan secilme agirligi
 #   max-stock        : Maksimum stok adedi
 #   rarity           : SIRADAN | NADIR | DESTANSI | EFSANEVI
-#                      Pazar acildiginda esyanin nadirligine gore custom kafa cikar.
-#                      Oyuncu sag tiklayinca kafa patlar ve gercek esyayi gosterir.
+#                      (Pazar acildiginda esya bu nadirligin kafasiyla baslar; sag tikla acilir.)
 #   custom-model-data: (Opsiyonel) Resource pack ile uyumlu CustomModelData degeri
-#   discount:
-#     min            : Minimum indirim yuzdesi
-#     max            : Maksimum indirim yuzdesi
+#   discount: { min, max }
 #   reward:
-#     type           : "ITEM" veya "COMMAND"
-#     amount         : ITEM ise verilecek adet (hologramda da ×N olarak gosterilir)
-#     command        : COMMAND ise calistirilacak komut (%player% destekli, console olarak calisir)
+#     type           : ITEM veya COMMAND
+#     amount         : ITEM ise verilecek adet (hologramda ×N olarak gosterilir)
+#     command        : COMMAND ise calistirilacak komut (%player% destekli)
 # ------------------------------------------------------------
 items:
   diamond-sword:
@@ -97,13 +93,8 @@ items:
     chance: 25
     max-stock: 2
     rarity: NADIR
-    # custom-model-data: 1001
-    discount:
-      min: 10
-      max: 40
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 10, max: 40 }
+    reward: { type: ITEM, amount: 1 }
 
   enchanted-golden-apple:
     material: ENCHANTED_GOLDEN_APPLE
@@ -115,12 +106,8 @@ items:
     chance: 15
     max-stock: 3
     rarity: DESTANSI
-    discount:
-      min: 15
-      max: 50
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 15, max: 50 }
+    reward: { type: ITEM, amount: 1 }
 
   totem-of-undying:
     material: TOTEM_OF_UNDYING
@@ -131,12 +118,8 @@ items:
     chance: 8
     max-stock: 1
     rarity: EFSANEVI
-    discount:
-      min: 20
-      max: 60
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 20, max: 60 }
+    reward: { type: ITEM, amount: 1 }
 
   elytra:
     material: ELYTRA
@@ -147,12 +130,8 @@ items:
     chance: 5
     max-stock: 1
     rarity: EFSANEVI
-    discount:
-      min: 25
-      max: 60
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 25, max: 60 }
+    reward: { type: ITEM, amount: 1 }
 
   netherite-ingot:
     material: NETHERITE_INGOT
@@ -163,12 +142,8 @@ items:
     chance: 10
     max-stock: 2
     rarity: DESTANSI
-    discount:
-      min: 15
-      max: 50
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 15, max: 50 }
+    reward: { type: ITEM, amount: 1 }
 
   diamond:
     material: DIAMOND
@@ -179,12 +154,8 @@ items:
     chance: 30
     max-stock: 8
     rarity: NADIR
-    discount:
-      min: 10
-      max: 35
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 10, max: 35 }
+    reward: { type: ITEM, amount: 1 }
 
   experience-bottle:
     material: EXPERIENCE_BOTTLE
@@ -195,12 +166,8 @@ items:
     chance: 35
     max-stock: 16
     rarity: SIRADAN
-    discount:
-      min: 10
-      max: 40
-    reward:
-      type: ITEM
-      amount: 4
+    discount: { min: 10, max: 40 }
+    reward: { type: ITEM, amount: 4 }
 
   golden-carrot:
     material: GOLDEN_CARROT
@@ -211,12 +178,8 @@ items:
     chance: 40
     max-stock: 16
     rarity: SIRADAN
-    discount:
-      min: 10
-      max: 30
-    reward:
-      type: ITEM
-      amount: 8
+    discount: { min: 10, max: 30 }
+    reward: { type: ITEM, amount: 8 }
 
   ender-pearl:
     material: ENDER_PEARL
@@ -227,12 +190,8 @@ items:
     chance: 30
     max-stock: 8
     rarity: SIRADAN
-    discount:
-      min: 10
-      max: 35
-    reward:
-      type: ITEM
-      amount: 2
+    discount: { min: 10, max: 35 }
+    reward: { type: ITEM, amount: 2 }
 
   fly-command:
     material: FEATHER
@@ -243,9 +202,7 @@ items:
     chance: 10
     max-stock: 1
     rarity: NADIR
-    discount:
-      min: 20
-      max: 50
+    discount: { min: 20, max: 50 }
     reward:
       type: COMMAND
       command: "effect give %player% minecraft:levitation 1800 0 true"
@@ -259,12 +216,8 @@ items:
     chance: 6
     max-stock: 1
     rarity: EFSANEVI
-    discount:
-      min: 20
-      max: 55
-    reward:
-      type: ITEM
-      amount: 1
+    discount: { min: 20, max: 55 }
+    reward: { type: ITEM, amount: 1 }
 
   shulker-shell:
     material: SHULKER_SHELL
@@ -275,9 +228,5 @@ items:
     chance: 18
     max-stock: 4
     rarity: NADIR
-    discount:
-      min: 15
-      max: 40
-    reward:
-      type: ITEM
-      amount: 2
+    discount: { min: 15, max: 40 }
+    reward: { type: ITEM, amount: 2 }

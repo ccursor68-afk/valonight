@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.emergent</groupId>
-    <artifactId>GecePazari</artifactId>
-    <version>1.0.0</version>
+    <groupId>com.artfulminer</groupId>
+    <artifactId>ENightMarket</artifactId>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
-    <name>GecePazari</name>
-    <description>Valorant'in Gece Pazari konseptini Minecraft'a uyarlayan Paper 1.21.4 eklentisi.</description>
+    <name>ENightMarket</name>
+    <description>Valorant Night Market konseptini Minecraft Paper 1.21.4 icin uyarlayan, cok dilli ve zamanli pazar eklentisi.</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -27,6 +27,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -42,10 +46,16 @@
             <version>1.7</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.6</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
-        <finalName>GecePazari-${project.version}</finalName>
+        <finalName>ENightMarket-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

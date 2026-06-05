@@ -7,6 +7,7 @@ import com.emergent.gecepazari.data.MarketItemTemplate;
 import com.emergent.gecepazari.data.PlayerDataManager;
 import com.emergent.gecepazari.data.PlayerMarketData;
 import com.emergent.gecepazari.economy.EconomyHook;
+import com.emergent.gecepazari.lang.LanguageManager;
 import com.emergent.gecepazari.util.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -29,6 +30,7 @@ public final class MarketManager {
 
     private final GecePazariPlugin plugin;
     private final ConfigManager config;
+    private final LanguageManager lang;
     private final PlayerDataManager dataManager;
     private final MarketRoller roller;
     private final EconomyHook economy;
@@ -40,11 +42,13 @@ public final class MarketManager {
 
     public MarketManager(GecePazariPlugin plugin,
                          ConfigManager config,
+                         LanguageManager lang,
                          PlayerDataManager dataManager,
                          MarketRoller roller,
                          EconomyHook economy) {
         this.plugin = plugin;
         this.config = config;
+        this.lang = lang;
         this.dataManager = dataManager;
         this.roller = roller;
         this.economy = economy;
@@ -111,7 +115,7 @@ public final class MarketManager {
             dataManager.save(data);
         }
 
-        PlayerMarket market = new PlayerMarket(plugin, config, player, data);
+        PlayerMarket market = new PlayerMarket(plugin, config, lang, player, data);
         activeMarkets.put(id, market);
         market.spawn();
         return market;
